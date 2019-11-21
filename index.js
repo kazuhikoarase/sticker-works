@@ -20,7 +20,7 @@ var requestListener = (req,res) => {
   var contentType = mimeTypes[url.replace(/^.+(\.\w+)$/, '$1')];
   if (contentType) {
     res.writeHead(200, { 'Content-Type': contentType });
-    res.end(fs.readFileSync(__dirname + '/public' + url, 'UTF-8') );
+    res.end(fs.readFileSync(__dirname + '/docs' + url, 'UTF-8') );
   }
 };
 
