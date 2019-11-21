@@ -14,7 +14,7 @@ var mimeTypes = {
 
 var requestListener = (req,res) => {
   var url = req.url;
-  if (url.match(/^.+\/$/) ) {
+  if (url.match(/^.*\/$/) ) {
     url += 'index.html';
   }
   var contentType = mimeTypes[url.replace(/^.+(\.\w+)$/, '$1')];
