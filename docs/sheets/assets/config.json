@@ -21,7 +21,7 @@
   "showPaperBox": true,
   "showBgBox": true,
   "rotate": false,
-  "zoom": "1",
+  "zoom": "0.5",
   "// TypeNumber 0(auto) or 1~40": "",
   "typeNumber": 0,
   "// ErrorCorrectionLevel": "",
