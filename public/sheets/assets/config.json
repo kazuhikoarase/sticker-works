@@ -1,0 +1,33 @@
+{
+  "title": "stickers",
+  "dataUrl": "assets/URLs.txt",
+  "bgUrl": "assets/bg.svg",
+  "// Here is the size derived from the Illustrator's Artboard size.": "",
+  "// If it is specified 0, the value is calculated from viewBox of SVG.": "",
+  "//stickerWidth": 100,
+  "//stickerHeight": 100,
+  "stickerWidth": 0,
+  "stickerHeight": 0,
+  "paperWidth": 210,
+  "paperHeight": 297,
+  "marginLeft": 10,
+  "marginRight": 10,
+  "marginTop": 15,
+  "marginBottom": 15,
+  "hGap": 10,
+  "vGap": 5,
+  "hQrMargin": 10,
+  "vQrMargin": 10,
+  "showPaperBox": true,
+  "showBgBox": true,
+  "rotate": false,
+  "zoom": "1",
+  "// TypeNumber 0(auto) or 1~40": "",
+  "typeNumber": 0,
+  "// ErrorCorrectionLevel": "",
+  "ecl": "L",
+  "// pixel colors for QR code.": "",
+  "pixels": [
+    "#000"
+  ]
+}

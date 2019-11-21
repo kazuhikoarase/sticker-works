@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.10/vue.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro&display=swap">
+    <link rel="stylesheet" href="style.css">
+    <meta charset="utf-8" />
+  </head>
+  <body>
+    <div id="app" v-cloak>
+      <input type="text" style="font-size:1.5rem;"
+             v-model="config.title" placeholder="Enter title here" />
+      <div style="margin:8px;">
+        <div style="margin-bottom:4px;white-space:nowrap;">
+          <label @mousedown.prevent><input type="checkbox"
+            v-model="config.showPaperBox" />Show Paper Box</label>
+          <label @mousedown.prevent><input type="checkbox"
+            v-model="config.showBgBox" />Show Bg Box(Artboard)</label>
+          <label @mousedown.prevent><input type="checkbox"
+            v-model="config.rotate" />Rotate</label>
+        </div>
+        <div style="margin-bottom:4px;white-space:nowrap;">
+          <label>ErrorCorrectionLevel:<select v-model="config.ecl">
+            <option v-for="ecl in eclSet" :value="ecl.value">{{ecl.label}}</option>
+            </select></label>
+          <label>Zoom:<select v-model="config.zoom">
+            <option v-for="zoom in zoomSet" :value="zoom.value">{{zoom.label}}</option>
+            </select></label>
+        </div>
+        <div style="float:left;margin-right:8px;">
+          <slider label="Margin Left(Paper)" :min="0" :max="40" v-model="config.marginLeft"></slider>
+          <br/><slider label="Margin Right(Paper)" :min="0" :max="40" v-model="config.marginRight"></slider>
+          <br/><slider label="Margin Top(Paper)" :min="0" :max="40" v-model="config.marginTop"></slider>
+          <br/><slider label="Margin Bottom(Paper)" :min="0" :max="40" v-model="config.marginBottom"></slider>
+          <br/><slider label="Horizontal Gap" :min="0" :max="40" v-model="config.hGap"></slider>
+          <br/><slider label="Vertical Gap" :min="0" :max="40" v-model="config.vGap"></slider>
+          <br/><slider label="Horizontal Margin(QR)" :min="0" :max="40" v-model="config.hQrMargin"></slider>
+          <br/><slider label="Vertical(Top) Margin(QR)" :min="0" :max="40" v-model="config.vQrMargin"></slider>
+        </div>
+        <div style="float:left;">
+          <div>copy back to the assets/config.json</div>
+          <textarea style="width:18rem;height:9rem;"
+                    :readonly="true" :value="JSON.stringify(config,null,2)">
+          </textarea>
+        </div>
+        <br style="clear:both;" />
+      </div>
+      <div>{{strings.length}} stickers / {{sheets.length}} sheets</div>
+      <div v-for="(sheet, i) in sheets" class="stickers-sheet">
+        <span class="sheet-id">{{sheet.id}}</span>
+        <button class="dl-button" @click="download_clickHandler(i, sheet.id)">Download SVG</button>
+        <div style="width:200px;height:300px;overflow:auto;">
+          <div ref="svgHolder" :style="svgHolderStyle">
+            <svg ref="svg" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
+                 :width="mm2pixel(config.paperWidth) + 'px'"
+                 :height="mm2pixel(config.paperHeight) + 'px'"
+                 :view-box.camel="'0 0 ' + config.paperWidth + ' ' + config.paperHeight" >
+              <rect v-if="config.showPaperBox" fill="none" stroke="black"
+                    stroke-width="0.5"
+                    :width="config.paperWidth" :height="config.paperHeight" />
+              <g v-for="sticker in sheet.stickers"
+                 :transform="stickerTransform(sticker)">
+                <!-- background image -->
+                <x-svg :width="stickerWidth" :height="stickerHeight"
+                       :svg="bgSVG" @load="svg_loadHandler"></x-svg>
+                <!-- background rect -->
+                <rect v-if="config.showBgBox" :width="stickerWidth" :height="stickerHeight"
+                      fill="none" stroke="black" stroke-width="0.5" />
+                <!-- qrcode -->
+                <qrcode :data="sticker.data" :x="config.hQrMargin" :y="config.vQrMargin"
+                        :size="sticker.size" :pixels="config.pixels"
+                        :type-number="config.typeNumber"
+                        :error-correction-level="config.ecl" ></qrcode>
+              </g>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script src="components.js"></script>
+    <script src="sketch.js"></script>
+  </body>
+</html>

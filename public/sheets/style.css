@@ -1,0 +1,34 @@
+* {
+  font-family: 'Source Code Pro', monospace;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+}
+
+[v-cloak] { display: none; }
+
+.stickers-sheet {
+  float: left;
+  background-color: white;
+  box-shadow: 0px 0px 4px 4px rgba(0,0,0,0.1);
+  margin: 8px;
+  padding: 4px;
+}
+
+.sheet-id {
+  padding: 1px;
+  color: white;
+  background-color: black;
+}
+
+.slider::-webkit-scrollbar {
+  -webkit-appearance: slider-horizontal;
+  width: 4px;
+}
+
+.slider::-webkit-scrollbar-thumb {
+  border-radius: 6px;
+  background-color: rgba(0,0,0,0.4);
+}
