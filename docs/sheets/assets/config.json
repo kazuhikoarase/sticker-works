@@ -18,6 +18,8 @@
   "vGap": 5,
   "hQrMargin": 10,
   "vQrMargin": 10,
+  "frameWidth": 300,
+  "frameHeight": 200,
   "showPaperBox": true,
   "showBgBox": true,
   "rotate": false,

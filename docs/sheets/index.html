@@ -48,9 +48,12 @@
       </div>
       <div>{{strings.length}} stickers / {{sheets.length}} sheets</div>
       <div v-for="(sheet, i) in sheets" class="stickers-sheet">
+        <resizable-border v-if="i == 0" enable="r rb b"
+          @resizestart="resizestartHandler"
+          @resizemove="resizemoveHandler"></resizable-border>
         <span class="sheet-id">{{sheet.id}}</span>
         <button class="dl-button" @click="download_clickHandler(i, sheet.id)">Download SVG</button>
-        <div style="width:200px;height:300px;overflow:auto;">
+        <div :style="frameStyle">
           <div ref="svgHolder" :style="svgHolderStyle">
             <svg ref="svg" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
                  :width="mm2pixel(config.paperWidth) + 'px'"

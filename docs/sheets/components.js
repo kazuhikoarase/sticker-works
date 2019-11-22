@@ -1,5 +1,91 @@
 // reusable components.
 
+Vue.component('resizable-border', {
+  template: '<div></div>',
+  props : {
+    debug: { default: false },
+    enable: { default: '' }
+  },
+  mounted: function() {
+    var elms = [ this.$el ];
+    for (var i = 0; i < 7; i += 1) {
+      var elm = document.createElement('DIV');
+      this.$el.parentNode.appendChild(elm);
+      elms.push(elm);
+    }
+    // 4 0 5
+    // 3   1
+    // 7 2 6
+    var box = '4px';
+    var bdr = '2px';
+    var bar = '100%';
+    var edg = '0px';
+    var styles = [
+      { width: bar, height: bdr, left: edg, top: edg, cursor: 'ns-resize' },
+      { width: bdr, height: bar, right: edg, top: edg, cursor: 'ew-resize' },
+      { width: bar, height: bdr, left: edg, bottom: edg, cursor: 'ns-resize' },
+      { width: bdr, height: bar, left: edg, top: edg, cursor: 'ew-resize' },
+      { width: box, height: box, left: edg, top: edg, cursor: 'nwse-resize' },
+      { width: box, height: box, right: edg, top: edg, cursor: 'nesw-resize ' },
+      { width: box, height: box, right: edg, bottom: edg, cursor: 'nwse-resize' },
+      { width: box, height: box, left: edg, bottom: edg, cursor: 'nesw-resize ' }
+    ];
+    var dirs = [ 't', 'r', 'b', 'l', 'lt', 'rt', 'rb', 'lb' ];
+    var $ = function(e) {
+      return {
+        on: function(t, l) { e.addEventListener(t, l); return this; },
+        off: function(t, l) { e.removeEventListener(t, l); return this; },
+      };
+    };
+    var opacity = this.debug? '0.5' : '0';
+    var vm = this;
+    var extend = Vue.util.extend;
+    var enable = this.enable? this.enable.split(/[\s,]+/g) : null;
+    elms.forEach(function(e, i) {
+      extend(e.style, extend(styles[i], {
+        position: 'absolute',
+        backgroundColor: i < 4? 'red' : 'blue',
+        opacity: opacity
+      }) );
+      if (enable && enable.indexOf(dirs[i]) == -1) {
+        e.style.display = 'none';
+      }
+      $(e).on('mousedown', function(event) {
+        var mousemoveHandler = function(event) {
+          vm.$emit('resizemove', {
+            dir: dirs[i],
+            dx: event.pageX - dragPoint.x,
+            dy: event.pageY - dragPoint.y
+          });
+        };
+        var mouseupHandler = function(event) {
+          $(document).off('mousemove', mousemoveHandler).
+            off('mouseup', mouseupHandler);
+          document.body.removeChild(block);
+          vm.$emit('resizeend', { dir: dirs[i] });
+        };
+        //
+        event.preventDefault();
+        $(document).on('mousemove', mousemoveHandler).
+          on('mouseup', mouseupHandler);
+        var dragPoint = { x: event.pageX, y: event.pageY };
+        var block = document.createElement('DIV');
+        extend(block.style, {
+          position: 'absolute',
+          left: document.documentElement.scrollLeft + 'px',
+          top: document.documentElement.scrollTop + 'px',
+          width: '100%', height: '100%',
+          backgroundColor: 'green',
+          opacity: opacity,
+          cursor: styles[i].cursor,
+        });
+        document.body.appendChild(block);
+        vm.$emit('resizestart', { dir: dirs[i] });
+      });
+    });
+  }
+});
+
 Vue.component('x-svg', {
   template: '<g v-html="svg"></g>',
   props: {

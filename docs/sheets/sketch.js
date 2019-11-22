@@ -5,6 +5,7 @@ var vm = new Vue({
     strings: [],
     stickerWidth: 0,
     stickerHeight: 0,
+    lastState: {},
     bgSVG: '',
     zoomSet: [
       { value: '0.05', label: '5%' },
@@ -100,6 +101,14 @@ var vm = new Vue({
       }
       return sheets;
     },
+    frameStyle: function() {
+      var config = this.config;
+      return {
+        width: config.frameWidth + 'px',
+        height: config.frameHeight + 'px',
+        overflow: 'auto'
+      };
+    },
     svgHolderStyle: function() {
       return { transform: 'scale(' + this.config.zoom + ')',
               transformOrigin: 'top left' };
@@ -119,6 +128,30 @@ var vm = new Vue({
         transform += 'rotate(-90)'
       }
       return transform;
+    },
+    resizestartHandler: function(event) {
+      var config = this.config;
+      this.lastState.frameWidth = config.frameWidth;
+      this.lastState.frameHeight = config.frameHeight;
+    },
+    resizemoveHandler: function(event) {
+      var dx = 0;
+      var dy = 0;
+      if (event.dir.indexOf('l') != -1) {
+        dx = -event.dx;
+      }
+      if (event.dir.indexOf('r') != -1) {
+        dx = event.dx;
+      }
+      if (event.dir.indexOf('t') != -1) {
+        dy = -event.dy;
+      }
+      if (event.dir.indexOf('b') != -1) {
+        dy = event.dy;
+      }
+      var config = this.config;
+      config.frameWidth = Math.max(0, this.lastState.frameWidth + dx);
+      config.frameHeight = Math.max(0, this.lastState.frameHeight + dy);
     },
     svg_loadHandler: function(event) {
       var viewBox = (event.svg.getAttribute('viewBox') || '').split(/\s/g);
