@@ -1,0 +1,6 @@
+{
+  "configSet": [
+    { "title": "my config1", "url": "assets/config.json" },
+    { "title": "my config2", "url": "assets/config2.json" }
+  ]
+}

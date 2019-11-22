@@ -1,6 +1,8 @@
 var vm = new Vue({
   el: '#app',
   data: {
+    appConfig: {},
+    configUrl: '',
     config: {},
     strings: [],
     stickerWidth: 0,
@@ -27,22 +29,44 @@ var vm = new Vue({
     dpi: 72 // fixed to 72dpi
   },
   mounted: function() {
-    this.loadResource('assets/config.json', function(data) {
-      var config = JSON.parse(data);
-      this.config = config;
-      this.stickerWidth = config.stickerWidth;
-      this.stickerHeight = config.stickerHeight;
-      // load data for qrcode.
-      this.loadResource(config.dataUrl, function(data) {
-        this.strings = data.split(/\s+/g).filter(function(line) {
-          return line.length > 0; // reject blank line.
-        });
-      }.bind(this) );
-      // load background image.
-      this.loadResource(config.bgUrl, function(data) {
-        this.bgSVG = data;
-      }.bind(this) );
+    this.loadResource('assets/app-config.json', function(data) {
+      var appConfig = JSON.parse(data);
+      this.appConfig = appConfig;
+      var configUrl = '';
+      appConfig.configSet.forEach(function(config) {
+        if (config.selected) {
+          configUrl = config.url;
+        }
+      });
+      if (!configUrl && appConfig.configSet.length > 0) {
+        // select first item.
+        configUrl = appConfig.configSet[0].url;
+      }
+      this.configUrl = configUrl;
     }.bind(this) );
+  },
+  watch: {
+    configUrl: function(newVal) {
+      if (!newVal) {
+        return;
+      }
+      this.loadResource(newVal, function(data) {
+        var config = JSON.parse(data);
+        this.config = config;
+        this.stickerWidth = config.stickerWidth;
+        this.stickerHeight = config.stickerHeight;
+        // load data for qrcode.
+        this.loadResource(config.dataUrl, function(data) {
+          this.strings = data.split(/\s+/g).filter(function(line) {
+            return line.length > 0; // reject blank line.
+          });
+        }.bind(this) );
+        // load background image.
+        this.loadResource(config.bgUrl, function(data) {
+          this.bgSVG = data;
+        }.bind(this) );
+      }.bind(this) );
+    }
   },
   computed: {
     sheets : function() {
