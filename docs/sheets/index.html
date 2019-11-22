@@ -55,7 +55,7 @@
             </template>                               
           </div>
           <div style="float:left;">
-            <div>copy back to assets/config.json</div>
+            <div>copy back to <span style="color:blue;">{{configUrl}}</span></div>
             <textarea style="width:18rem;height:9rem;"
                       :readonly="true" :value="JSON.stringify(config,null,2)">
             </textarea>
