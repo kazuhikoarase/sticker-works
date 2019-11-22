@@ -35,11 +35,22 @@
           <br/><slider label="Margin Bottom(Paper)" :min="0" :max="40" v-model="config.marginBottom"></slider>
           <br/><slider label="Horizontal Gap" :min="0" :max="40" v-model="config.hGap"></slider>
           <br/><slider label="Vertical Gap" :min="0" :max="40" v-model="config.vGap"></slider>
-          <br/><slider label="Horizontal Margin(QR)" :min="0" :max="40" v-model="config.hQrMargin"></slider>
-          <br/><slider label="Vertical(Top) Margin(QR)" :min="0" :max="40" v-model="config.vQrMargin"></slider>
+          <br/><slider label="QR Size" :min="0" :max="40" v-model="config.qrSize"></slider>
+          <template v-for="(v, i) in config.qrMarginLeft" v-if="bgSVG">
+            <br/><slider :label="'Margin Left#' + (i + 1) + '(QR)'"
+                         :min="0" :max="40" v-model="config.qrMarginLeft[i].coarse"></slider>
+            <br/><slider label=" Fine"
+                         :min="-10" :max="10" v-model="config.qrMarginLeft[i].fine"></slider>
+          </template>
+          <template v-if="config.qrMarginTop">
+            <br/><slider label="Margin Top(QR)"
+                         :min="0" :max="40" v-model="config.qrMarginTop.coarse"></slider>
+            <br/><slider label=" Fine"
+                         :min="-10" :max="10" v-model="config.qrMarginTop.fine"></slider>
+          </template>                               
         </div>
         <div style="float:left;">
-          <div>copy back to the assets/config.json</div>
+          <div>copy back to assets/config.json</div>
           <textarea style="width:18rem;height:9rem;"
                     :readonly="true" :value="JSON.stringify(config,null,2)">
           </textarea>
@@ -53,7 +64,7 @@
           @resizemove="resizemoveHandler"></resizable-border>
         <span class="sheet-id">{{sheet.id}}</span>
         <button class="dl-button" @click="download_clickHandler(i, sheet.id)">Download SVG</button>
-        <div :style="frameStyle">
+        <div :style="frameStyle" @mousedown="frame_mousedownHandler">
           <div ref="svgHolder" :style="svgHolderStyle">
             <svg ref="svg" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
                  :width="mm2pixel(config.paperWidth) + 'px'"
@@ -71,8 +82,8 @@
                 <rect v-if="config.showBgBox" :width="stickerWidth" :height="stickerHeight"
                       fill="none" stroke="black" stroke-width="0.5" />
                 <!-- qrcode -->
-                <qrcode :data="sticker.data" :x="config.hQrMargin" :y="config.vQrMargin"
-                        :size="sticker.size" :pixels="config.pixels"
+                <qrcode v-for="qr in sticker.qrs" :data="qr.data" :x="qr.x" :y="qr.y"
+                        :size="config.qrSize" :pixels="config.pixels"
                         :type-number="config.typeNumber"
                         :error-correction-level="config.ecl" ></qrcode>
               </g>

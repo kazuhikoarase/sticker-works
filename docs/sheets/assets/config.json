@@ -16,8 +16,21 @@
   "marginBottom": 15,
   "hGap": 10,
   "vGap": 5,
-  "hQrMargin": 10,
-  "vQrMargin": 10,
+  "qrSize": 15,
+  "qrMarginLeft": [
+    {
+      "coarse": 10,
+      "fine": 0
+    },
+    {
+      "coarse": 30,
+      "fine": 0
+    }
+  ],
+  "qrMarginTop": {
+    "coarse": 7.5,
+    "fine": 0
+  },
   "frameWidth": 300,
   "frameHeight": 200,
   "showPaperBox": true,

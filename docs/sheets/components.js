@@ -154,14 +154,6 @@ Vue.component('slider', {
       var value = this.$refs.body.scrollLeft * r2 / r1 + this.min;
       this.$emit('input', Math.round(value * 100) / 100);
     }
-  },
-  components: {
-    xSvg: {
-    },
-    slider: {
-    },
-    qrcode: {
-    }
   }
 });
 

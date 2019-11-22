@@ -6,6 +6,7 @@ var vm = new Vue({
     stickerWidth: 0,
     stickerHeight: 0,
     lastState: {},
+    grabbing: false,
     bgSVG: '',
     zoomSet: [
       { value: '0.05', label: '5%' },
@@ -14,7 +15,8 @@ var vm = new Vue({
       { value: '0.5', label: '50%' },
       { value: '1', label: '100%' },
       { value: '1.5', label: '150%' },
-      { value: '2', label: '200%' }
+      { value: '2', label: '200%' },
+      { value: '4', label: '400%' }
     ],
     eclSet: [
       { value: 'L', label: 'L(7%)' },
@@ -56,7 +58,6 @@ var vm = new Vue({
       var config = this.config;
       var stickerWidth = this.stickerWidth;
       var stickerHeight = this.stickerHeight;
-      var size = Math.max(1, this.stickerWidth - config.hQrMargin * 2);
 
       // if auto calc, temporary set the paper size.
       if (stickerWidth <= 0) {
@@ -82,7 +83,17 @@ var vm = new Vue({
       while (strings.length > 0) {
         var stickers = [];
         while (strings.length > 0) {
-          stickers.push({ data: strings.shift(), x: x, y: y, size: size });
+
+          var qrs = [];
+          while (strings.length > 0 && qrs.length < config.qrMarginLeft.length) {
+            qrs.push({ data: strings.shift(),
+                      x: config.qrMarginLeft[qrs.length].coarse +
+                        config.qrMarginLeft[qrs.length].fine / 10,
+                      y: config.qrMarginTop.coarse +
+                        config.qrMarginTop.fine / 10 });
+          }
+
+          stickers.push({ qrs: qrs, x: x, y: y });
           x += stickerWidth + config.hGap;
           if (x + stickerWidth >
               config.paperWidth - config.marginRight) {
@@ -106,7 +117,8 @@ var vm = new Vue({
       return {
         width: config.frameWidth + 'px',
         height: config.frameHeight + 'px',
-        overflow: 'auto'
+        overflow: 'auto',
+        cursor: this.grabbing? 'grabbing' : 'grab'
       };
     },
     svgHolderStyle: function() {
@@ -128,6 +140,25 @@ var vm = new Vue({
         transform += 'rotate(-90)'
       }
       return transform;
+    },
+    frame_mousedownHandler: function(event) {
+      // frame grab feature.
+      var mousemoveHandler = function(event) {
+        target.scrollLeft = dragPoint.left + dragPoint.x - event.pageX;
+        target.scrollTop = dragPoint.top + dragPoint.y - event.pageY;
+      }.bind(this);
+      var mouseupHandler = function(event) {
+        document.removeEventListener('mousemove', mousemoveHandler);
+        document.removeEventListener('mouseup', mouseupHandler);
+        this.grabbing = false;
+      }.bind(this);
+      event.preventDefault();
+      document.addEventListener('mousemove', mousemoveHandler);
+      document.addEventListener('mouseup', mouseupHandler);
+      var target = event.currentTarget;
+      var dragPoint = { x: event.pageX, y: event.pageY,
+                      left: target.scrollLeft, top: target.scrollTop };
+      this.grabbing = true;
     },
     resizestartHandler: function(event) {
       var config = this.config;
