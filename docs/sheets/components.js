@@ -116,20 +116,11 @@ Vue.component('x-svg', {
 
 Vue.component('slider', {
   template: '<label>' +
-    '<div ref="body" @scroll="scrollHandler" class="slider" style="vertical-align:middle;">' +
-      '<div ref="content"></div></div>' +
+    '<input ref="input" type="range" style="vertical-align:middle;"' +
+      ' :value="str(value)" :min="str(min)" :max="str(max)"' +
+      ' @input="inputHandler" />' +
     '<span v-html="label" style="vertical-align:middle;"></span></label>',
   mounted: function() {
-    Vue.util.extend(this.$refs.content.style, {
-      width: '500px', height: '1px' });
-    Vue.util.extend(this.$refs.body.style, {
-      display: 'inline-block',
-      overflowX: 'scroll', overflowY: 'hidden',
-      width: '100px', height: '100px'
-    });
-    this.$refs.body.style.height = (this.$refs.body.offsetHeight -
-                                    this.$refs.body.clientHeight) + 'px';
-    this.updateUI(this.value);
   },
   props: {
     min: { default: 0, type: Number },
@@ -137,22 +128,12 @@ Vue.component('slider', {
     value: { default: 5, type: Number },
     label: { default: '', type: String }
   },
-  watch: {
-    value: function(newVal) {
-      this.updateUI(newVal);
-    }
-  },
   methods: {
-    updateUI: function(value) {
-      var r1 = this.$refs.content.offsetWidth - this.$refs.body.offsetWidth;
-      var r2 = this.max - this.min;
-      this.$refs.body.scrollLeft = (value - this.min) * r1 / r2;
+    str: function(n) {
+      return '' + n;
     },
-    scrollHandler: function() {
-      var r1 = this.$refs.content.offsetWidth - this.$refs.body.offsetWidth;
-      var r2 = this.max - this.min;
-      var value = this.$refs.body.scrollLeft * r2 / r1 + this.min;
-      this.$emit('input', Math.round(value * 100) / 100);
+    inputHandler: function() {
+      this.$emit('input', +this.$refs.input.value);
     }
   }
 });
