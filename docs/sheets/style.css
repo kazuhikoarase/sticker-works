@@ -24,13 +24,3 @@ html, body {
   color: white;
   background-color: black;
 }
-
-.slider::-webkit-scrollbar {
-  -webkit-appearance: slider-horizontal;
-  width: 4px;
-}
-
-.slider::-webkit-scrollbar-thumb {
-  border-radius: 6px;
-  background-color: rgba(0,0,0,0.4);
-}
