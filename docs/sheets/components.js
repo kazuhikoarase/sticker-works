@@ -19,7 +19,7 @@ Vue.component('resizable-border', {
     var box = '4px';
     var bdr = '2px';
     var bar = '100%';
-    var edg = '0px';
+    var edg = '-1px';
     var styles = [
       { width: bar, height: bdr, left: edg, top: edg, cursor: 'ns-resize' },
       { width: bdr, height: bar, right: edg, top: edg, cursor: 'ew-resize' },
