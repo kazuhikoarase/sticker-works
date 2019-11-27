@@ -221,9 +221,9 @@
 
   components['slider'] = {
     template: '<label>' +
-      '<input ref="input" type="range" style="vertical-align:middle;"' +
+      '<input ref="input" type="range" style="vertical-align:middle;width:100px;"' +
         ' :value="str(value)" :min="str(min)" :max="str(max)"' +
-        ' class="slider-range" @input="inputHandler" />' +
+        ' @input="inputHandler" />' +
       '<span v-html="label" style="vertical-align:middle;"></span></label>',
     mounted: function() {
     },
@@ -381,11 +381,8 @@
           ' @mousedown.prevent @click="setSelectedIndex(p.i)">' +
             '<div :style="colorChooserStyle(p)"></div>' +
           '</div>' +
-        '</div>' +
-        '<br/>' +
-        '<div style="display:inline-block;float:left;">' +
           '<template v-for="(hs, i) in hsvSliders" >' +
-          '<br v-if="i != 0"/><label><input type="range" style="width:100px;vertical-align:middle;" min="0" :max="hs.max" :step="hs.step" :value="hs.value"' +
+            '<br/><label><input type="range" style="width:100px;vertical-align:middle;" min="0" :max="hs.max" :step="hs.step" :value="hs.value"' +
             ' @input="hsv_inputHandler($event, i)" />' +
             '<span style="vertical-align:middle;">{{hs.label}}</span></label>' +
           '</template><br/><label><input type="checkbox" v-model="linked" />Linked</label>' +

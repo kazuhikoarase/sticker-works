@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.6.10/vue.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro&display=swap">
+    <link rel="stylesheet" type="text/css" href="style.css">
+    <meta charset="utf-8" />
+
+  </head>
+  <body>
+    <div id="app">
+      <color-picker :size="300" v-model="colors"></color-picker>
+      <textarea style="width:200px;height:150px;" :readonly="true"
+                v-model="JSON.stringify(colors, null, 2)" ></textarea>
+    </div>
+    <script src="../sheets/components.js"></script>
+    <script src="sketch.js"></script>
+  </body>
+</html>

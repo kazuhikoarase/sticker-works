@@ -1,4 +1,4 @@
-var vm = new Vue({
+new Vue({
   el: '#app',
   data: {
     appConfig: {},
