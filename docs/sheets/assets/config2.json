@@ -17,6 +17,7 @@
   "hGap": 10,
   "vGap": 5,
   "qrSize": 15,
+  "// You could define multiple qrMarginLeft then would get same number of qrcodes.": "",
   "qrMarginLeft": [
     {
       "coarse": 10,
