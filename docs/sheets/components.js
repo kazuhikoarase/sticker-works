@@ -118,7 +118,7 @@ Vue.component('slider', {
   template: '<label>' +
     '<input ref="input" type="range" style="vertical-align:middle;"' +
       ' :value="str(value)" :min="str(min)" :max="str(max)"' +
-      ' @input="inputHandler" />' +
+      ' class="slider-range" @input="inputHandler" />' +
     '<span v-html="label" style="vertical-align:middle;"></span></label>',
   mounted: function() {
   },
