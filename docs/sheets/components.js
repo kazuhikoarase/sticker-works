@@ -283,15 +283,27 @@
     watch: { qrcode: function() {} },
     computed: {
       qrcode: function() {
-        var cacheMap = qrcode.$vueCacheMap || (qrcode.$vueCacheMap = {});
-        var key = [this.typeNumber, this.errorCorrectionLevel,
+        var cacheMap = qrcode.$vueCacheMap ||
+          (qrcode.$vueCacheMap = { stat: { callCount: 0, failCount: 0 } });
+        var stat = cacheMap.stat;
+        var qrDataKey = [this.typeNumber, this.errorCorrectionLevel,
                    this.pixels.join(','), '', this.data].join('\n');
-        var qrData = cacheMap[key];
+        var qrData = cacheMap[qrDataKey];
+        stat.callCount +=1;
         if (!qrData) {
-          // cache not found, create new
-          var qr = qrcode(this.typeNumber, this.errorCorrectionLevel);
-          qr.addData(this.data);
-          qr.make();
+          stat.failCount +=1;
+          var qrKey = [this.typeNumber, this.errorCorrectionLevel,
+            '', this.data].join('\n');
+          var qr = cacheMap[qrKey];
+          stat.callCount +=1;
+          if (!qr) {
+            stat.failCount +=1;
+            // cache not found, create new
+            qr = qrcode(this.typeNumber, this.errorCorrectionLevel);
+            qr.addData(this.data);
+            qr.make();
+            cacheMap[qrKey] = qr;
+          }
           var j = 0;
           var pixels = this.pixels;
           var moduleCount = qr.getModuleCount();
@@ -330,7 +342,7 @@
           }
           ctx.putImageData(image, 0, 0);
           // put to cache.
-          qrData = cacheMap[key] = {
+          qrData = cacheMap[qrDataKey] = {
             url: ctx.canvas.toDataURL(), imgSize: moduleCount };
         }
         this.url = qrData.url;
