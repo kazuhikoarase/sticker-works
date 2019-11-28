@@ -402,12 +402,103 @@
     }
   };
 
+  components['color-pointer'] = {
+    template: '<canvas></canvas>',
+    props: {
+      width: { default: 50 },
+      height: { default: 50 },
+      add: { default: true },
+      fill: { default: '#ccc' },
+      shadow: { default: true }
+    },
+    watch: { render: function() {} },
+    computed: {
+      render: function() {
+        if (!this.ctx) {
+          return [ this.ctx ];
+        }
+
+        var ctx = this.ctx;
+        ctx.canvas.width = this.width;
+        ctx.canvas.height = this.height;
+
+        ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+        ctx.save();
+
+        ctx.scale(this.width, this.height);
+        ctx.scale(1 / this.viewBox[2], 1 / this.viewBox[3]);
+        ctx.translate(-this.viewBox[0], -this.viewBox[1]);
+
+        ctx.fillStyle = 'rgba(255,0,0,0)';
+        ctx.fillRect(this.viewBox[0], this.viewBox[1],
+            this.viewBox[2], this.viewBox[3]);
+        this.pointers.forEach(function(p, i) {
+
+          if (!(this.shadow || (i == 1) ) ) {
+            return;
+          }
+          ctx.fillStyle = this.fill;
+          ctx.beginPath();
+          ctx.arc(0, 0, 5, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.lineCap = 'round';
+          ctx.strokeStyle = p.color;
+          ctx.lineWidth = p.width;
+          ctx.beginPath();
+          ctx.moveTo(0, -5.5);
+          ctx.lineTo(0, -13);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.arc(0, 0, 5, 0, Math.PI * 2);
+          ctx.stroke();
+
+          ctx.beginPath();
+          ctx.moveTo(2, -9);
+          ctx.lineTo(6, -9);
+          ctx.stroke();
+
+          if (this.add) {
+            ctx.beginPath();
+            ctx.moveTo(4, -7);
+            ctx.lineTo(4, -11);
+            ctx.stroke();
+          }
+
+        }.bind(this) );
+        ctx.restore();
+
+        return [ this.ctx, this.add, this.shadow, this.fill ];
+      }
+    },
+    data: function() {
+      return {
+        ctx: null,
+        viewBox: [-11.5, -16.5, 24, 24],
+        pointers : [
+          { color: '#fff', width: '3' },
+          { color: '#000', width: '1' }
+        ]
+      };
+    },
+    mounted: function() {
+      if (this.$el && typeof this.$el.getContext == 'function') {
+        this.ctx = this.$el.getContext('2d');
+      }
+    }
+  };
+
   components['color-picker'] = {
     template: '<div>' +
         '<div style="position:relative;display:inline-block;float:left;">' +
+          '<color-pointer ref="pointer" style="display:none;" fill="none"' +
+          ' :width="24" :height="24" :add="buttonMode == \'add\'"></color-pointer>' +
           '<color-circle :size="size" :style="{ margin: margin + \'px\' }"/>' +
-          '<svg style="position:absolute;left:0px;top:0px;"' +
-            ' @mousedown="picker_mousedownHandler($event)"' +
+          '<svg ref="colorEditor" style="position:absolute;left:0px;top:0px;"' +
+          ' @mousedown="picker_mousedownHandler($event)"' +
+          ' @mouseover="picker_mouseoverHandler($event)"' +
+          ' @mouseout="picker_mouseoverHandler($event)"' +
             ' :width="size + margin * 2" :height="size + margin * 2"' +
             ' :viewBox.camel="viewBox">' +
             '<path v-for="c in colorHandles" :d="pathLine(c.x, c.y)"' +
@@ -415,7 +506,8 @@
             '<g v-for="c in colorHandles"' +
               ' :transform="\'translate(\' + c.x + \' \' + c.y + \')\'"' +
               ' :x-colorHandle-index="c.i">' +
-              '<circle :r="c.r + (c.i == selectedIndex? 3 : 1)"' +
+              '<circle :r="c.r + (c.i == selectedIndex? 3 : 1)' +
+              ' + (c.i == overIndex? 1 : 0)"' +
                 ' fill="black" stroke="none"/>' +
               '<circle :r="c.r" :fill="colors[c.i]" stroke="white" />' +
             '</g>' +
@@ -437,17 +529,20 @@
             '</span></label>' +
           '</template>' +
           '<br/><label><input type="checkbox" v-model="linked" />Linked</label>' +
-          '<br/><svg v-for="(button, i) in buttonStates" style="margin-right:4px;"' +
-            ' width="24" height="24" :viewBox.camel="\'0 0 16 16\'"' +
-            ' @mouseover="button_mouseHandler($event, i)"' +
-            ' @mouseout="button_mouseHandler($event, i)"' +
-            ' @mousedown="button_mouseHandler($event, i)"' +
-            ' @mouseup="button_mouseHandler($event, i)" >' +
-            '<rect :opacity="buttonOpacity(i)"' +
-              ' fill="#000" strole="none" width="16" height="16" rx="4" ry="4"/>' +
-            '<path fill="none" stroke="#000" stroke-width="2" d="M4 8L12 8" />' +
-            '<path v-if="i == 0" fill="none" stroke="#000" stroke-width="2" d="M8 4L8 12" />' +
-          '</svg>' +
+          '<br/><div v-for="(button, i) in buttonStates"' +
+              ' style="margin-right:4px;line-height:1;position:relative;display:inline-block;"' +
+              ' @mouseover="button_mouseHandler($event, i)"' +
+              ' @mouseout="button_mouseHandler($event, i)"' +
+              ' @mousedown="button_mouseHandler($event, i)"' +
+              ' @mouseup="button_mouseHandler($event, i)">' +
+            '<color-pointer style="position:absolute;left:0px;top:0px;"' +
+              ' :width="24" :height="24"' +
+              ' :add="i == 0" :shadow="false" fill="#ccc" ></color-pointer>' +
+            '<svg width="24" height="24" :viewBox.camel="\'0 0 16 16\'" >' +
+              '<rect :opacity="buttonOpacity(i)"' +
+              ' fill="#0cf" stroke="#00c" x="0.5" y="0.5" width="15" height="15" rx="4" ry="4"/>' +
+            '</svg>' +
+          '</div>' +
         '</div>' +
         '<br style="clear:both;"/>' +
       '</div>',
@@ -459,7 +554,8 @@
     data: function() {
       return {
         linked: true,
-        selectedIndex: 0,
+        overIndex: -1,
+        selectedIndex: -1,
         colorHandles: [],
         buttonMode: '',
         buttonStates: [
@@ -469,7 +565,21 @@
       };
     },
     watch: {
-      prepareHandles: function() {}
+      prepareHandles: function() {},
+      buttonMode: function() {
+        this.$nextTick(function() {
+          var cursor = '';
+          if (this.buttonMode) {
+            var pointer =  this.$refs.pointer;
+            var vb = pointer.viewBox;
+            var x = -vb[0] / vb[2] * pointer.width;
+            var y = -vb[1] / vb[3] * pointer.height;
+            cursor = 'url(' + pointer.$el.toDataURL() + ') ' +
+              ~~x + ' ' + ~~y + ', auto';
+          }
+          this.$refs.colorEditor.style.cursor = cursor;
+        });
+      }
     },
     computed: {
       colors: function() { return this.value; },
@@ -527,11 +637,11 @@
       buttonOpacity: function(i) {
         var state = this.buttonStates[i];
         if (this.buttonMode == state.mode || state.down) {
-          return '0.6';
+          return '0.2';
         } else if (state.over) {
           return '0.2';
         }
-        return '0.4';
+        return '0';
       },
       button_mouseHandler: function(event, i) {
         var state = this.buttonStates[i];
@@ -565,6 +675,17 @@
           }
         }.bind(this) );
         this.$emit('input', colors);
+      },
+      picker_mouseoverHandler: function(event) {
+        var $el = this.closest(function(elm) {
+          return elm.getAttribute('x-colorHandle-index') != null;
+        }, event);
+        if (!$el) {
+          return;
+        }
+        event.preventDefault();
+        var targetIndex = +$el.getAttribute('x-colorHandle-index');
+        this.overIndex = event.type == 'mouseover'? targetIndex : -1;
       },
       picker_mousedownHandler: function(event) {
         var $el = this.closest(function(elm) {
