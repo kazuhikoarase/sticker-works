@@ -438,8 +438,7 @@
             ' @mouseover="button_mouseHandler($event, i)"' +
             ' @mouseout="button_mouseHandler($event, i)"' +
             ' @mousedown="button_mouseHandler($event, i)"' +
-            ' @mouseup="button_mouseHandler($event, i)"' +
-            ' @click="button_mouseHandler($event, i)" >' +
+            ' @mouseup="button_mouseHandler($event, i)" >' +
             '<rect :opacity="buttonOpacity(i)"' +
               ' fill="#000" strole="none" width="16" height="16" rx="4" ry="4"/>' +
             '<path fill="none" stroke="#000" stroke-width="2" d="M4 8L12 8" />' +
@@ -458,9 +457,10 @@
         linked: true,
         selectedIndex: 0,
         colorHandles: [],
+        buttonMode: '',
         buttonStates: [
-          { down: false, over: false, selected: false },
-          { down: false, over: false }
+          { down: false, over: false, mode: 'add' },
+          { down: false, over: false, mode: 'del' }
         ]
       };
     },
@@ -504,7 +504,7 @@
       },
       buttonOpacity: function(i) {
         var state = this.buttonStates[i];
-        if (state.selected || state.down) {
+        if (this.buttonMode == state.mode || state.down) {
           return '0.6';
         } else if (state.over) {
           return '0.2';
@@ -522,21 +522,7 @@
           state.down = true;
         } else if (event.type == 'mouseup') {
           state.down = false;
-          if (i == 0) {
-            state.selected = !state.selected;
-          } else if (i == 1) {
-          }
-        } else if (event.type == 'click') {
-          if (i == 1) {
-            var colors = [];
-            this.colors.forEach(function(color, i) {
-              if (this.selectedIndex != i) {
-                colors.push(color);
-              }
-            }.bind(this) );
-            this.selectedIndex = -1;
-            this.$emit('input', colors);
-          }
+          this.buttonMode = this.buttonMode != state.mode? state.mode: '';
         }
       },
       hsv_inputHandler: function(event, hsvIndex) {
@@ -559,20 +545,23 @@
         this.$emit('input', colors);
       },
       picker_mousedownHandler: function(event) {
-
         var $el = this.closest(function(elm) {
           return elm.getAttribute('x-colorHandle-index') != null;
         }, event);
-        if (!$el) {
+        if (this.buttonMode == 'add') {
           this.picker_mousedownHandler_add_handle(event);
+        } else if (this.buttonMode == 'del') {
+          if ($el) {
+            this.picker_mousedownHandler_del_handle(event, $el);
+          }
         } else {
-          this.picker_mousedownHandler_move_handle(event, $el);
+          if ($el) {
+            this.picker_mousedownHandler_move_handle(event, $el);
+          }
         }
       },
       picker_mousedownHandler_add_handle: function(event) {
-        if (!this.buttonStates[0].selected) {
-          return;
-        }
+        event.preventDefault();
         var r = this.size / 2;
         var x = event.offsetX - r - this.margin;
         var y = event.offsetY - r - this.margin;
@@ -588,8 +577,21 @@
             ColorUtil.hsv2rgb(h, s, 1) );
         var colors = this.colors.slice();
         colors.push(color);
-        this.buttonStates[0].selected = false;
+        this.buttonMode = '';
         this.selectedIndex = colors.length - 1;
+        this.$emit('input', colors);
+      },
+      picker_mousedownHandler_del_handle: function(event, $el) {
+        event.preventDefault();
+        var targetIndex = +$el.getAttribute('x-colorHandle-index');
+        var colors = [];
+        this.colors.forEach(function(color, i) {
+          if (targetIndex != i) {
+            colors.push(color);
+          }
+        }.bind(this) );
+        this.buttonMode = '';
+        this.selectedIndex = colors.length > 0? 0 : -1;
         this.$emit('input', colors);
       },
       picker_mousedownHandler_move_handle: function(event, $el) {
