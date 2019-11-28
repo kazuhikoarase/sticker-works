@@ -492,8 +492,10 @@
   components['color-picker'] = {
     template: '<div>' +
         '<div style="position:relative;display:inline-block;float:left;">' +
-          '<color-pointer ref="pointer" style="display:none;" fill="none"' +
-          ' :width="24" :height="24" :add="buttonMode == \'add\'"></color-pointer>' +
+          '<color-pointer ref="addPointer" style="display:none;" fill="none"' +
+          ' :width="24" :height="24" :add="true"></color-pointer>' +
+          '<color-pointer ref="delPointer" style="display:none;" fill="none"' +
+          ' :width="24" :height="24" :add="false"></color-pointer>' +
           '<color-circle :size="size" :style="{ margin: margin + \'px\' }"/>' +
           '<svg ref="colorEditor" style="position:absolute;left:0px;top:0px;"' +
           ' @mousedown="picker_mousedownHandler($event)"' +
@@ -539,8 +541,8 @@
               ' :width="24" :height="24"' +
               ' :add="i == 0" :shadow="false" fill="#ccc" ></color-pointer>' +
             '<svg width="24" height="24" :viewBox.camel="\'0 0 16 16\'" >' +
-              '<rect :opacity="buttonOpacity(i)"' +
-              ' fill="#0cf" stroke="#00c" x="0.5" y="0.5" width="15" height="15" rx="4" ry="4"/>' +
+              '<rect :opacity="0.2" v-if="buttonOverlay(i)"' +
+              ' fill="#0cf" stroke="#00c" x="0.5" y="0.5" width="15" height="15" />' +
             '</svg>' +
           '</div>' +
         '</div>' +
@@ -555,7 +557,7 @@
       return {
         linked: true,
         overIndex: -1,
-        selectedIndex: -1,
+        selectedIndex: 0,
         colorHandles: [],
         buttonMode: '',
         buttonStates: [
@@ -566,19 +568,9 @@
     },
     watch: {
       prepareHandles: function() {},
-      buttonMode: function() {
-        this.$nextTick(function() {
-          var cursor = '';
-          if (this.buttonMode) {
-            var pointer =  this.$refs.pointer;
-            var vb = pointer.viewBox;
-            var x = -vb[0] / vb[2] * pointer.width;
-            var y = -vb[1] / vb[3] * pointer.height;
-            cursor = 'url(' + pointer.$el.toDataURL() + ') ' +
-              ~~x + ' ' + ~~y + ', auto';
-          }
-          this.$refs.colorEditor.style.cursor = cursor;
-        });
+      buttonMode: function(newVal) {
+        this.$refs.colorEditor.style.cursor = newVal?
+            this.getCursor(newVal == 'add') : '';
       }
     },
     computed: {
@@ -613,6 +605,15 @@
       }
     },
     methods: {
+      getCursor: function(add) {
+        var pointer =  add?
+            this.$refs.addPointer : this.$refs.delPointer;
+        var vb = pointer.viewBox;
+        var x = -vb[0] / vb[2] * pointer.width;
+        var y = -vb[1] / vb[3] * pointer.height;
+        return 'url(' + pointer.$el.toDataURL() + ') ' +
+          ~~x + ' ' + ~~y + ', auto';
+      },
       formatNumber: function(v, digits) {
         var neg = v < 0;
         if (neg) {
@@ -634,14 +635,14 @@
       pathLine: function(x, y) {
         return 'M0 0L' + x + ' ' + y;
       },
-      buttonOpacity: function(i) {
+      buttonOverlay: function(i) {
         var state = this.buttonStates[i];
         if (this.buttonMode == state.mode || state.down) {
-          return '0.2';
+          return true;
         } else if (state.over) {
-          return '0.2';
+          return true;
         }
-        return '0';
+        return false;
       },
       button_mouseHandler: function(event, i) {
         var state = this.buttonStates[i];
