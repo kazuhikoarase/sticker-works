@@ -102,10 +102,31 @@
     var rgb2hsv = function(r, g, b) {
       return rgb2hslv(r, g, b, 'hsv');
     };
+    var color2rgb = function() {
+      var ctx = null;
+      var cache = {};
+      return function(color) {
+        var rgb = cache[color];
+        if (!rgb) {
+          if (ctx == null) {
+            ctx = document.createElement('canvas').getContext('2d');
+            ctx.canvas.width = 1;
+            ctx.canvas.height = 1;
+          }
+          ctx.fillStyle = color;
+          ctx.fillRect(0, 0, 1, 1);
+          var data = ctx.getImageData(0, 0, 1, 1).data;
+          rgb = Object.freeze([ data[0], data[1], data[2], data[3] ]);
+          cache[color] = rgb;
+        }
+        return rgb;
+      };
+    }();
     return {
       rgb2hex: rgb2hex, hex2rgb: hex2rgb,
       hsl2rgb: hsl2rgb, rgb2hsl: rgb2hsl,
-      hsv2rgb: hsv2rgb, rgb2hsv: rgb2hsv
+      hsv2rgb: hsv2rgb, rgb2hsv: rgb2hsv,
+      color2rgb: color2rgb
     };
   }();
 
@@ -276,8 +297,10 @@
           var moduleCount = qr.getModuleCount();
           var ctx = document.createElement('canvas').getContext('2d');
           ctx.canvas.width = ctx.canvas.height = moduleCount;
+          var image = ctx.createImageData(moduleCount, moduleCount);
+          var index = 0;
           // There are three position probe patterns
-          // at fixed position and size. 
+          // at fixed position and size.
           var posProbes = [
             { x: 2, y: 2, pixel: null },
             { x: moduleCount - 5, y: 2, pixel: null },
@@ -296,11 +319,16 @@
                     pixel = pp.pixel; // use stored pixel
                   }
                 });
-                ctx.fillStyle = pixel;
-                ctx.fillRect(c, r, 1, 1);
+                var rgbPixel = ColorUtil.color2rgb(pixel);
+                image.data[index] = rgbPixel[0];
+                image.data[index + 1] = rgbPixel[1];
+                image.data[index + 2] = rgbPixel[2];
+                image.data[index + 3] = rgbPixel[3];
               }
+              index += 4;
             }
           }
+          ctx.putImageData(image, 0, 0);
           // put to cache.
           qrData = cacheMap[key] = {
             url: ctx.canvas.toDataURL(), imgSize: moduleCount };
