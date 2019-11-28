@@ -394,18 +394,23 @@
     template: '<div>' +
         '<div style="position:relative;display:inline-block;float:left;">' +
           '<color-circle :size="size" :style="{ margin: margin + \'px\' }"/>' +
-          '<svg style="position:absolute;left:0px;top:0px;" @mousedown="picker_mousedownHandler($event)"' +
+          '<svg style="position:absolute;left:0px;top:0px;"' +
+            ' @mousedown="picker_mousedownHandler($event)"' +
             ' :width="size + margin * 2" :height="size + margin * 2"' +
             ' :viewBox.camel="viewBox">' +
-            '<path v-for="p in pickers" :d="pathLine(p.x, p.y, linked)" fill="none" stroke="black" />' +
-            '<g v-for="p in pickers" :transform="pickerTransform(p)" :x-picker-index="p.i">' +
-              '<circle :r="p.r + (p.i == selectedIndex? 3 : 1)" fill="black" stroke="none"/>' +
+            '<path v-for="p in pickers" :d="pathLine(p.x, p.y)"' +
+              ' fill="none" stroke="black" :stroke-dasharray="linked?\'\':\'2\'" />' +
+            '<g v-for="p in pickers" :transform="pickerTransform(p)"' +
+              ' :x-picker-index="p.i">' +
+              '<circle :r="p.r + (p.i == selectedIndex? 3 : 1)"' +
+                ' fill="black" stroke="none"/>' +
               '<circle :r="p.r" :fill="colors[p.i]" stroke="white" />' +
             '</g>' +
           '</svg>' +
         '</div>' +
         '<div style="display:inline-block;float:left;">' +
-          '<div v-for="p in pickers" style="display:inline-block;line-height:1;border:1px solid #000;"' +
+          '<div v-for="p in pickers"' +
+            ' style="display:inline-block;line-height:1;border:1px solid #000;"' +
           ' @mousedown.prevent @click="setSelectedIndex(p.i)">' +
             '<div :style="colorChooserStyle(p)"></div>' +
           '</div>' +
@@ -413,7 +418,20 @@
             '<br/><label><input type="range" style="width:100px;vertical-align:middle;" min="0" :max="hs.max" :step="hs.step" :value="hs.value"' +
             ' @input="hsv_inputHandler($event, i)" />' +
             '<span style="vertical-align:middle;">{{hs.label}}</span></label>' +
-          '</template><br/><label><input type="checkbox" v-model="linked" />Linked</label>' +
+          '</template>' +
+          '<br/><label><input type="checkbox" v-model="linked" />Linked</label>' +
+          '<br/><svg v-for="(button, i) in buttonStates" style="margin-right:4px;"' +
+            ' width="24" height="24" :viewBox.camel="\'0 0 16 16\'"' +
+            ' @mouseover="button_mouseHandler($event, i)"' +
+            ' @mouseout="button_mouseHandler($event, i)"' +
+            ' @mousedown="button_mouseHandler($event, i)"' +
+            ' @mouseup="button_mouseHandler($event, i)"' +
+            ' @click="button_mouseHandler($event, i)" >' +
+            '<rect :opacity="buttonOpacity(i)"' +
+              ' fill="#000" strole="none" width="16" height="16" rx="4" ry="4"/>' +
+            '<path fill="none" stroke="#000" stroke-width="2" d="M4 8L12 8" />' +
+            '<path v-if="i == 0" fill="none" stroke="#000" stroke-width="2" d="M8 4L8 12" />' +
+          '</svg>' +
         '</div>' +
         '<br style="clear:both;"/>' +
       '</div>',
@@ -426,11 +444,15 @@
       return {
         linked: true,
         selectedIndex: 0,
-        pickers: []
+        pickers: [],
+        buttonStates: [
+          { down: false, over: false, selected: false },
+          { down: false, over: false }
+        ]
       };
     },
     watch: {
-      preparePickers: function() {} 
+      preparePickers: function() {}
     },
     computed: {
       colors: function() { return this.value; },
@@ -464,8 +486,45 @@
       }
     },
     methods: {
-      pathLine: function(x, y, linked) {
+      pathLine: function(x, y) {
         return 'M0 0L' + x + ' ' + y;
+      },
+      buttonOpacity: function(i) {
+        var state = this.buttonStates[i];
+        if (state.selected || state.down) {
+          return '0.6';
+        } else if (state.over) {
+          return '0.2';
+        }
+        return '0.4';
+      },
+      button_mouseHandler: function(event, i) {
+        var state = this.buttonStates[i];
+        if (event.type == 'mouseover') {
+          state.over = true;
+        } else if (event.type == 'mouseout') {
+          state.over = false;
+        } else if (event.type == 'mousedown') {
+          event.preventDefault();
+          state.down = true;
+        } else if (event.type == 'mouseup') {
+          state.down = false;
+          if (i == 0) {
+            state.selected = !state.selected;
+          } else if (i == 1) {
+          }
+        } else if (event.type == 'click') {
+          if (i == 1) {
+            var colors = [];
+            this.colors.forEach(function(color, i) {
+              if (this.selectedIndex != i) {
+                colors.push(color);
+              }
+            }.bind(this) );
+            this.selectedIndex = -1;
+            this.$emit('input', colors);
+          }
+        }
       },
       hsv_inputHandler: function(event, hsvIndex) {
         var picker = this.pickers[this.selectedIndex];
@@ -492,8 +551,35 @@
           return elm.getAttribute('x-picker-index') != null;
         }, event);
         if (!$el) {
+          this.picker_mousedownHandler_add_picker(event);
+        } else {
+          this.picker_mousedownHandler_move_picker(event, $el);
+        }
+      },
+      picker_mousedownHandler_add_picker: function(event) {
+        if (!this.buttonStates[0].selected) {
           return;
         }
+        var r = this.size / 2;
+        var x = event.offsetX - r - this.margin;
+        var y = event.offsetY - r - this.margin;
+        var s = Math.sqrt(x * x + y * y) / r;
+        var h = Math.atan2(-y, x) * 180 / Math.PI;
+        if (h < 0) {
+          h += 360;
+        }
+        if (s > 1) {
+          return;
+        }
+        var color = ColorUtil.rgb2hex.apply(null,
+            ColorUtil.hsv2rgb(h, s, 1) );
+        var colors = this.colors.slice();
+        colors.push(color);
+        this.buttonStates[0].selected = false;
+        this.selectedIndex = colors.length - 1;
+        this.$emit('input', colors);
+      },
+      picker_mousedownHandler_move_picker: function(event, $el) {
 
         event.preventDefault();
         var targetIndex = +$el.getAttribute('x-picker-index');
