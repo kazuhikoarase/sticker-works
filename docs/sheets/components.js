@@ -419,11 +419,11 @@
       '</div>',
     props: {
       value: { default: ['#f00', '#0f0', '#00f'], type: Array },
+      margin: { default: 16, type: Number },
+      size: { default: 216, type: Number }
     },
     data: function() {
       return {
-        margin: 16,
-        size: 216,
         linked: true,
         selectedIndex: 0,
         pickers: []
