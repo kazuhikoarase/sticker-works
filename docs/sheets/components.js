@@ -662,13 +662,7 @@
       },
       pickerTransform: function(p) {
         return 'translate(' + p.x + ' ' + p.y + ')';
-      },
-      clickHandler: function(event) {
-        var x = event.clientX;
-        var y = event.clientY;
       }
-    },
-    mounted: function() {
     }
   };
 
