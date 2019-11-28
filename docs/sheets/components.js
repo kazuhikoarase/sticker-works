@@ -486,7 +486,7 @@
             s = 1;
           }
           var dh = h - pickers[targetIndex].hsv[0];
-          var ds = s - pickers[targetIndex].hsv[1];
+          var ds = s / pickers[targetIndex].hsv[1]; // ratio
           var colors = this.colors.slice();
           colors.forEach(function(_, i) {
             if (picker.i == i || this.linked) {
@@ -495,7 +495,7 @@
               if (picker.i == i) {
                 hsv[1] = s;
               } else if (this.linked) {
-                hsv[1] = Math.min(hsv[1] + ds, 1);
+                hsv[1] = Math.min(hsv[1] * ds, 1);
               }
               var color = ColorUtil.rgb2hex.apply(null,
                   ColorUtil.hsv2rgb.apply(null, hsv) );
