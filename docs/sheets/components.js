@@ -466,6 +466,8 @@
         if (!$el) {
           return;
         }
+
+        event.preventDefault();
         var targetIndex = +$el.getAttribute('x-picker-index');
         this.setSelectedIndex(targetIndex);
 
