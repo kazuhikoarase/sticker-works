@@ -37,6 +37,27 @@
       }
       return [0, 0, 0];
     }
+    var coords = [
+      [0, 0],
+      [Math.PI * 2.00, 360]
+    ];
+    var lastCoords = coords[coords.length - 1];
+    var rad2hue = function(value, reverse) {
+      var src = reverse? 1 : 0;
+      var dst = reverse? 0 : 1;
+      value = value % lastCoords[src];
+      if (value < 0) {
+        value += lastCoords[src];
+      }
+      for (var i = 1; i < coords.length; i += 1) {
+        var c1 = coords[i - 1];
+        var c2 = coords[i];
+        if (c1[src] <= value && value < c2[src]) {
+          return (value - c1[src]) / (c2[src] - c1[src]) * (c2[dst] - c1[dst]) + c1[dst];
+        }
+      }
+      return 0;
+    };
     //
     var unit2ff = function(v) { return Math.floor(v * 255); };
     var ff2unit = function(v) { return v / 255; };
@@ -126,7 +147,7 @@
       rgb2hex: rgb2hex, hex2rgb: hex2rgb,
       hsl2rgb: hsl2rgb, rgb2hsl: rgb2hsl,
       hsv2rgb: hsv2rgb, rgb2hsv: rgb2hsv,
-      color2rgb: color2rgb
+      color2rgb: color2rgb, rad2hue: rad2hue
     };
   }();
 
@@ -383,7 +404,8 @@
             var pr = Math.sqrt(px * px + py * py);
             if (pr < r) {
               var rad = Math.atan2(-py, px);
-              h = rad * 360 / PI2;
+              //h = rad * 360 / PI2;
+              h = ColorUtil.rad2hue(rad);
               s = pr / r;
               var rgb = ColorUtil.hsv2rgb(h, s, v);
               data[i] = rgb[0];
