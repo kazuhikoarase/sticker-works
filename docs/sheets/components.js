@@ -400,7 +400,8 @@
             ' :viewBox.camel="viewBox">' +
             '<path v-for="c in colorHandles" :d="pathLine(c.x, c.y)"' +
               ' fill="none" stroke="black" :stroke-dasharray="linked?\'\':\'2\'" />' +
-            '<g v-for="c in colorHandles" :transform="pickerTransform(c)"' +
+            '<g v-for="c in colorHandles"' +
+              ' :transform="\'translate(\' + c.x + \' \' + c.y + \')\'"' +
               ' :x-colorHandle-index="c.i">' +
               '<circle :r="c.r + (c.i == selectedIndex? 3 : 1)"' +
                 ' fill="black" stroke="none"/>' +
@@ -659,9 +660,6 @@
           verticalAlign: 'top',
           display: 'inline-block'
         };
-      },
-      pickerTransform: function(p) {
-        return 'translate(' + p.x + ' ' + p.y + ')';
       }
     }
   };
