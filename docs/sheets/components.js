@@ -398,21 +398,21 @@
             ' @mousedown="picker_mousedownHandler($event)"' +
             ' :width="size + margin * 2" :height="size + margin * 2"' +
             ' :viewBox.camel="viewBox">' +
-            '<path v-for="p in pickers" :d="pathLine(p.x, p.y)"' +
+            '<path v-for="c in colorHandles" :d="pathLine(c.x, c.y)"' +
               ' fill="none" stroke="black" :stroke-dasharray="linked?\'\':\'2\'" />' +
-            '<g v-for="p in pickers" :transform="pickerTransform(p)"' +
-              ' :x-picker-index="p.i">' +
-              '<circle :r="p.r + (p.i == selectedIndex? 3 : 1)"' +
+            '<g v-for="c in colorHandles" :transform="pickerTransform(c)"' +
+              ' :x-colorHandle-index="c.i">' +
+              '<circle :r="c.r + (c.i == selectedIndex? 3 : 1)"' +
                 ' fill="black" stroke="none"/>' +
-              '<circle :r="p.r" :fill="colors[p.i]" stroke="white" />' +
+              '<circle :r="c.r" :fill="colors[c.i]" stroke="white" />' +
             '</g>' +
           '</svg>' +
         '</div>' +
         '<div style="display:inline-block;float:left;">' +
-          '<div v-for="p in pickers"' +
+          '<div v-for="c in colorHandles"' +
             ' style="display:inline-block;line-height:1;border:1px solid #000;"' +
-          ' @mousedown.prevent @click="setSelectedIndex(p.i)">' +
-            '<div :style="colorChooserStyle(p)"></div>' +
+          ' @mousedown.prevent @click="setSelectedIndex(c.i)">' +
+            '<div :style="colorChooserStyle(c)"></div>' +
           '</div>' +
           '<template v-for="(hs, i) in hsvSliders" >' +
             '<br/><label><input type="range" style="width:100px;vertical-align:middle;" min="0" :max="hs.max" :step="hs.step" :value="hs.value"' +
@@ -444,7 +444,7 @@
       return {
         linked: true,
         selectedIndex: 0,
-        pickers: [],
+        colorHandles: [],
         buttonStates: [
           { down: false, over: false, selected: false },
           { down: false, over: false }
@@ -452,13 +452,13 @@
       };
     },
     watch: {
-      preparePickers: function() {}
+      prepareHandles: function() {}
     },
     computed: {
       colors: function() { return this.value; },
       hsvSliders: function() {
-        var picker = this.pickers[this.selectedIndex];
-        var values = picker? picker.hsv : [0, 0, 0];
+        var colorHandle = this.colorHandles[this.selectedIndex];
+        var values = colorHandle? colorHandle.hsv : [0, 0, 0];
         return [
           { label: 'H', max: '360', step: '0.1' },
           { label: 'S', max: '1', step: '0.001' },
@@ -472,9 +472,9 @@
         var s = this.size / 2 + this.margin;
         return -s + ' ' + -s + ' ' + s * 2 + ' ' + s * 2;
       },
-      preparePickers: function() {
+      prepareHandles: function() {
         var r = this.size / 2;
-        this.pickers = this.colors.map(function(color, i) {
+        this.colorHandles = this.colors.map(function(color, i) {
           var rgb = ColorUtil.hex2rgb(color);
           var hsv = ColorUtil.rgb2hsv.apply(null, rgb);
           var t = hsv[0] / 180 * Math.PI;
@@ -527,16 +527,16 @@
         }
       },
       hsv_inputHandler: function(event, hsvIndex) {
-        var picker = this.pickers[this.selectedIndex];
-        if (!picker) {
+        var colorHandle = this.colorHandles[this.selectedIndex];
+        if (!colorHandle) {
           return;
         }
         var value = +event.target.value;
-        var delta = value - picker.hsv[hsvIndex];
+        var delta = value - colorHandle.hsv[hsvIndex];
         var colors = this.colors.slice();
         colors.forEach(function(_, i) {
-          if (picker.i == i || (this.linked && hsvIndex == 0) ) {
-            var hsv = this.pickers[i].hsv;
+          if (colorHandle.i == i || (this.linked && hsvIndex == 0) ) {
+            var hsv = this.colorHandles[i].hsv;
             hsv[hsvIndex] += delta;
             var color = ColorUtil.rgb2hex.apply(null,
                 ColorUtil.hsv2rgb.apply(null, hsv) );
@@ -548,15 +548,15 @@
       picker_mousedownHandler: function(event) {
 
         var $el = this.closest(function(elm) {
-          return elm.getAttribute('x-picker-index') != null;
+          return elm.getAttribute('x-colorHandle-index') != null;
         }, event);
         if (!$el) {
-          this.picker_mousedownHandler_add_picker(event);
+          this.picker_mousedownHandler_add_handle(event);
         } else {
-          this.picker_mousedownHandler_move_picker(event, $el);
+          this.picker_mousedownHandler_move_handle(event, $el);
         }
       },
-      picker_mousedownHandler_add_picker: function(event) {
+      picker_mousedownHandler_add_handle: function(event) {
         if (!this.buttonStates[0].selected) {
           return;
         }
@@ -579,10 +579,10 @@
         this.selectedIndex = colors.length - 1;
         this.$emit('input', colors);
       },
-      picker_mousedownHandler_move_picker: function(event, $el) {
+      picker_mousedownHandler_move_handle: function(event, $el) {
 
         event.preventDefault();
-        var targetIndex = +$el.getAttribute('x-picker-index');
+        var targetIndex = +$el.getAttribute('x-colorHandle-index');
         this.setSelectedIndex(targetIndex);
 
         var mousemoveHandler = function(event) {
@@ -599,14 +599,14 @@
           if (s > 1) {
             s = 1;
           }
-          var dh = h - pickers[targetIndex].hsv[0];
-          var ds = s / pickers[targetIndex].hsv[1]; // ratio
+          var dh = h - colorHandles[targetIndex].hsv[0];
+          var ds = s / colorHandles[targetIndex].hsv[1]; // ratio
           var colors = this.colors.slice();
           colors.forEach(function(_, i) {
-            if (picker.i == i || this.linked) {
-              var hsv = pickers[i].hsv.slice();
+            if (colorHandle.i == i || this.linked) {
+              var hsv = colorHandles[i].hsv.slice();
               hsv[0] = (hsv[0] + dh) % 360;
-              if (picker.i == i) {
+              if (colorHandle.i == i) {
                 hsv[1] = s;
               } else if (this.linked) {
                 hsv[1] = Math.min(hsv[1] * ds, 1);
@@ -625,9 +625,9 @@
             off('mouseup', mouseupandler);
         }.bind(this);
 
-        var pickers = this.pickers.slice();
-        var picker = pickers[targetIndex];
-        var lastPos = { x: picker.x, y: picker.y };
+        var colorHandles = this.colorHandles.slice();
+        var colorHandle = colorHandles[targetIndex];
+        var lastPos = { x: colorHandle.x, y: colorHandle.y };
         var dragPoint = { x: event.pageX, y: event.pageY };
         $(document).on('mousemove', mousemoveHandler).
           on('mouseup', mouseupandler);
