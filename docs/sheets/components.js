@@ -1,4 +1,4 @@
-// reusable components.
+// reusable components for Vue.js
 
 'use strict';
 
@@ -451,7 +451,8 @@
           if (picker.i == i || (this.linked && hsvIndex == 0) ) {
             var hsv = this.pickers[i].hsv;
             hsv[hsvIndex] += delta;
-            var color = ColorUtil.rgb2hex.apply(null, ColorUtil.hsv2rgb.apply(null, hsv) );
+            var color = ColorUtil.rgb2hex.apply(null,
+                ColorUtil.hsv2rgb.apply(null, hsv) );
             colors[i] = color;
           }
         }.bind(this) );
@@ -465,8 +466,8 @@
         if (!$el) {
           return;
         }
-        var i = +$el.getAttribute('x-picker-index');
-        this.setSelectedIndex(i);
+        var targetIndex = +$el.getAttribute('x-picker-index');
+        this.setSelectedIndex(targetIndex);
 
         var mousemoveHandler = function(event) {
           var deltaX = event.pageX - dragPoint.x;
@@ -482,16 +483,20 @@
           if (s > 1) {
             s = 1;
           }
-          var dh = h - pickers[i].hsv[0];
+          var dh = h - pickers[targetIndex].hsv[0];
+          var ds = s - pickers[targetIndex].hsv[1];
           var colors = this.colors.slice();
           colors.forEach(function(_, i) {
             if (picker.i == i || this.linked) {
-              var hsv = pickers[i].hsv;
+              var hsv = pickers[i].hsv.slice();
               hsv[0] = (hsv[0] + dh) % 360;
               if (picker.i == i) {
                 hsv[1] = s;
+              } else if (this.linked) {
+                hsv[1] = Math.min(hsv[1] + ds, 1);
               }
-              var color = ColorUtil.rgb2hex.apply(null, ColorUtil.hsv2rgb.apply(null, hsv) );
+              var color = ColorUtil.rgb2hex.apply(null,
+                  ColorUtil.hsv2rgb.apply(null, hsv) );
               colors[i] = color;
             }
           }.bind(this) );
@@ -500,14 +505,16 @@
         }.bind(this);
 
         var mouseupandler = function(event) {
-          $(document).off('mousemove', mousemoveHandler).off('mouseup', mouseupandler);
+          $(document).off('mousemove', mousemoveHandler).
+            off('mouseup', mouseupandler);
         }.bind(this);
 
         var pickers = this.pickers.slice();
-        var picker = pickers[i];
+        var picker = pickers[targetIndex];
         var lastPos = { x: picker.x, y: picker.y };
         var dragPoint = { x: event.pageX, y: event.pageY };
-        $(document).on('mousemove', mousemoveHandler).on('mouseup', mouseupandler);
+        $(document).on('mousemove', mousemoveHandler).
+          on('mouseup', mouseupandler);
       },
       closest: function(fn, event, root) {
         if (!root) {
