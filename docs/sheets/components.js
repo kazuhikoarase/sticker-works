@@ -428,9 +428,13 @@
             '<div :style="colorChooserStyle(c)"></div>' +
           '</div>' +
           '<template v-for="(hs, i) in hsvSliders" >' +
-            '<br/><label><input type="range" style="width:100px;vertical-align:middle;" min="0" :max="hs.max" :step="hs.step" :value="hs.value"' +
-            ' @input="hsv_inputHandler($event, i)" />' +
-            '<span style="vertical-align:middle;">{{hs.label}}</span></label>' +
+            '<br/><label><input type="range"' +
+              ' style="width:100px;vertical-align:middle;"' +
+              ' min="0" :max="hs.max" :step="hs.step" :value="hs.value"' +
+              ' @input="hsv_inputHandler($event, i)" />' +
+            '<span style="vertical-align:middle;">' +
+            '{{hs.label}} {{formatNumber(hs.scale * hs.value, 2)}}{{hs.unit}}' +
+            '</span></label>' +
           '</template>' +
           '<br/><label><input type="checkbox" v-model="linked" />Linked</label>' +
           '<br/><svg v-for="(button, i) in buttonStates" style="margin-right:4px;"' +
@@ -473,9 +477,9 @@
         var colorHandle = this.colorHandles[this.selectedIndex];
         var values = colorHandle? colorHandle.hsv : [0, 0, 0];
         return [
-          { label: 'H', max: '360', step: '0.1' },
-          { label: 'S', max: '1', step: '0.001' },
-          { label: 'V', max: '1', step: '0.001' },
+          { label: 'H', max: '360', step: '0.1', scale: 1, unit: '°' },
+          { label: 'S', max: '1', step: '0.001', scale: 100, unit: '%' },
+          { label: 'V', max: '1', step: '0.001', scale: 100, unit: '%' },
         ].map(function(hs, i) {
           hs.value = values[i];
           return hs;
@@ -499,6 +503,24 @@
       }
     },
     methods: {
+      formatNumber: function(v, digits) {
+        var neg = v < 0;
+        if (neg) {
+          v = -v;
+        }
+        for (var i = 0; i < digits; i += 1) {
+          v *= 10;
+        }
+        var s = '' + Math.round(v);
+        while (s.length <= digits) {
+          s = '0' + s;
+        }
+        if (digits > 0) {
+          s = s.substring(0, s.length - digits) +
+            '.' + s.substring(s.length - digits);
+        }
+        return neg? '-' + s : s;
+      },
       pathLine: function(x, y) {
         return 'M0 0L' + x + ' ' + y;
       },
