@@ -812,7 +812,7 @@ console.log(ColorUtil.rgb2hsv(255,255,255))
           }
         }.bind(this) );
         this.buttonMode = '';
-        this.selectedIndex = colors.length > 0? 0 : -1;
+        this.selectedIndex = 0;
         this.$emit('input', colors);
       },
       picker_mousedownHandler_move_marker: function(event, $el) {
