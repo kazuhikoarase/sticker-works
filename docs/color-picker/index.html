@@ -6,13 +6,30 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Code+Pro&display=swap">
     <link rel="stylesheet" type="text/css" href="style.css">
     <meta charset="utf-8" />
-
   </head>
   <body>
-    <div id="app">
-      <color-picker :size="300" v-model="colors"></color-picker>
-      <textarea style="width:200px;height:150px;" :readonly="true"
-                v-model="JSON.stringify(colors, null, 2)" ></textarea>
+    <div id="app" v-cloak>
+      <svg style="float:left;" width="120" height="120">
+        <rect width="120" height="120" :fill="bgColor" stroke="none" />
+        <g transform="translate(10, 10)">
+          <qrcode :size="100" :pixels="pixels"></qrcode>
+        </g>
+      </svg>
+      <div style="float:left;margin-left:4px;">
+        <textarea style="width:10rem;height:10rem;" :readonly="true"
+                  :value="JSON.stringify(pixels, null, 2)" ></textarea>
+        <br/>
+        <input type="text" style="width:4rem;" :readonly="true" :value="bgColor" />
+      </div>
+      <br style="clear:both;"/>
+      <div style="display: inline-block;border-radius: 6px; 
+          margin-top: 4px;padding: 4px;border: 1px solid #ccc;">
+        <label><input type="radio" v-model="mode" value="qr" />QR</label>
+        <label><input type="radio" v-model="mode" value="bg" />BgColor</label>
+        <br/>
+        <color-picker :size="216" :value="mode == 'qr'? pixels : [bgColor]"
+          @input="inputHandler"></color-picker>
+      </div>
     </div>
     <script src="../sheets/components.js"></script>
     <script src="sketch.js"></script>

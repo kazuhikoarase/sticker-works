@@ -1,13 +1,24 @@
 new Vue({
   el: '#app',
   data: {
-    colors: [
-      "#e17841",
-      "#d8a533",
-      "#d9de47",
-      "#9ac54f",
-      "#8fcc76",
-      "#8fc397"
+    mode: 'qr',
+    bgColor: '#ffffff',
+    pixels: [
+      "#ff3c00",
+      "#ffc500",
+      "#07ff00",
+      "#007aff",
+      "#2a00ff",
+      "#ff00e3"
     ]
+  },
+  methods: {
+    inputHandler(colors) {
+      if (this.mode == 'qr') {
+        this.pixels = colors.length > 0? colors : ['#000'];
+      } else if (this.mode == 'bg') {
+        this.bgColor = colors.length > 0? colors[0] : ['#fff'];
+      }
+    }
   }
 });

@@ -308,12 +308,12 @@
         ' :width="imgSize" :height="imgSize" :xlink:href="url" />',
     props: {
       typeNumber: { default: 0 },
-      errorCorrectionLevel: { default: 'L' },
-      data: { default: 'hi!' },
-      x: { default: 0 },
-      y: { default: 0 },
-      size: { default: 100 },
-      pixels : { default: [ '#666' ] }
+      errorCorrectionLevel: { default: 'L', type: String },
+      data: { default: 'hi!', type: String },
+      x: { default: 0, type: Number },
+      y: { default: 0, type: Number },
+      size: { default: 100, type: Number },
+      pixels : { default: function() { return [ '#666' ] }, type: Array }
     },
     data: function() {
       return { url: '', imgSize: 0 };
@@ -401,10 +401,11 @@
     template: '<canvas :width="size" :height="size"></canvas>',
     props: {
       size: { default: 100, type: Number },
-      brightness: { default: 1, type: Number }
+      brightness: { default: 1, type: Number },
+      overpaint: { default: 0, type: Number }
     },
     methods: {
-      updateImage: function(size, brightness) {
+      updateImage: function(size, brightness, overpaint) {
         var r = size / 2;
         var ctx = this.$el.getContext('2d');
         var image = ctx.createImageData(size, size);
@@ -419,11 +420,11 @@
             var px = x - r;
             var py = y - r;
             var pr = Math.sqrt(px * px + py * py);
-            if (pr < r) {
+            if (pr < r + overpaint) {
               var rad = Math.atan2(-py, px);
               //h = rad * 360 / PI2;
               h = ColorUtil.rad2hue(rad);
-              s = pr / r;
+              s = Math.min(pr / r, 1);
               var rgb = ColorUtil.hsv2rgb(h, s, v);
               data[i] = rgb[0];
               data[i + 1] = rgb[1];
@@ -437,7 +438,7 @@
       }
     },
     mounted: function() {
-      this.updateImage(this.size, this.brightness);
+      this.updateImage(this.size, this.brightness, this.overpaint);
     }
   };
 
@@ -535,7 +536,7 @@
           ' :width="24" :height="24" :add="true"></color-pointer>' +
           '<color-pointer ref="delPointer" style="display:none;" fill="none"' +
           ' :width="24" :height="24" :add="false"></color-pointer>' +
-          '<color-circle :size="size" :style="{ margin: margin + \'px\' }"/>' +
+          '<color-circle :overpaint="2" :size="size" :style="{ margin: margin + \'px\' }"/>' +
           '<svg tabindex="0" ref="colorEditor"' +
           ' style="position:absolute;left:0px;top:0px;outline:none;"' +
           ' @mousedown="picker_mousedownHandler($event)"' +
@@ -543,8 +544,12 @@
           ' @mouseout="picker_mouseoverHandler($event)"' +
             ' :width="size + margin * 2" :height="size + margin * 2"' +
             ' :viewBox.camel="viewBox">' +
+            '<circle cx="0" cy="0" :r="size / 2 + 2"' +
+            ' fill="none" stroke="white" stroke-width="4" />' +
             '<path v-for="c in colorHandles" :d="pathLine(c.x, c.y)"' +
-              ' fill="none" stroke="black" :stroke-dasharray="linked?\'\':\'2\'" />' +
+              ' fill="none" stroke="black"' +
+              ' :stroke-dasharray="linked?\'\':\'2\'"' +
+              ' :stroke-width="c.i == overIndex? 2 : 1" />' +
             '<g :style="colorHandleStyle" v-for="c in colorHandles"' +
               ' :transform="\'translate(\' + c.x + \' \' + c.y + \')\'"' +
               ' :x-colorHandle-index="c.i">' +
@@ -566,12 +571,12 @@
             '<br/><label><input type="range"' +
               ' style="width:100px;vertical-align:middle;"' +
               ' min="0" :max="hs.max" :step="hs.step" :value="hs.value"' +
-              ' @input="hsv_inputHandler($event, i, 1)" />' +
+              ' @mousedown="hsv_mousedownHandler($event, i, 1)" />' +
             '<span style="vertical-align:middle;">' +
             '{{hs.label}} <input type="text" style="text-align:right;width:3rem;"' +
             ' :value="formatNumber(hs.value * hs.scale, 2)"' +
             ' @focus="$event.target.select()"' +
-            ' @change="hsv_inputHandler($event, i, hs.scale)" />{{hs.unit}}' +
+            ' @change="hsv_changeHandler($event, i, hs.scale)" />{{hs.unit}}' +
             '</span></label>' +
           '</template>' +
           '<br/><label><input type="checkbox" v-model="linked" />Linked</label>' +
@@ -586,7 +591,7 @@
               ' :add="i == 0" :shadow="false" fill="#ccc" ></color-pointer>' +
             '<svg style="position:absolute;left:0px;top:0px;"' +
               ' width="24" height="24" :viewBox.camel="\'0 0 16 16\'" >' +
-              '<rect :opacity="0.2" v-if="buttonOverlay(i)"' +
+              '<rect :opacity="buttonOverlay(i)? 0.2 : 0"' +
               ' fill="#0cf" stroke="#00c" x="0.5" y="0.5" width="15" height="15" />' +
             '</svg>' +
           '</div>' +
@@ -624,9 +629,9 @@
         var colorHandle = this.colorHandles[this.selectedIndex];
         var values = colorHandle? colorHandle.hsv : [0, 0, 0];
         return [
-          { label: 'H', max: '360', step: '0.1', scale: 1, unit: '°' },
-          { label: 'S', max: '1', step: '0.001', scale: 100, unit: '%' },
-          { label: 'V', max: '1', step: '0.001', scale: 100, unit: '%' },
+          { label: 'H', max: '360', step: '0.01', scale: 1, unit: '°' },
+          { label: 'S', max: '1', step: '0.01', scale: 100, unit: '%' },
+          { label: 'V', max: '1', step: '0.01', scale: 100, unit: '%' },
         ].map(function(hs, i) {
           hs.value = values[i];
           return hs;
@@ -705,26 +710,47 @@
           this.buttonMode = this.buttonMode != state.mode? state.mode: '';
         }
       },
-      hsv_inputHandler: function(event, hsvIndex, scale) {
-        var colorHandle = this.colorHandles[this.selectedIndex];
-        if (!colorHandle) {
+      hsv_mousedownHandler: function(event, hsvIndex, scale) {
+        var targetHandle = this.colorHandles[this.selectedIndex];
+        if (!targetHandle) {
           return;
         }
-        var value = +event.target.value / scale;
-        var delta = value - colorHandle.hsv[hsvIndex];
-        if (isNaN(delta) ) {
-          delta = 0;
-        }
-        var colors = this.colors.slice();
-        colors.forEach(function(_, i) {
-          if (colorHandle.i == i || (this.linked && hsvIndex == 0) ) {
-            var hsv = this.colorHandles[i].hsv;
-            hsv[hsvIndex] += delta;
-            var color = ColorUtil.rgb2hex.apply(null,
-                ColorUtil.hsv2rgb.apply(null, hsv) );
-            colors[i] = color;
+        var editor = this.hsvEditor(targetHandle.i);
+        var target = event.target;
+        var mousemoveHandler = function(event) {
+          var value = +target.value / scale;
+          var hsv = targetHandle.hsv.slice();
+          if (!isNaN(value) ) {
+            hsv[0] = hsvIndex == 0? value : hsv[0];
+            hsv[1] = hsvIndex == 1? value : hsv[1];
+            hsv[2] = hsvIndex == 2? value : hsv[2];
           }
-        }.bind(this) );
+          var colors = editor.getColors(
+              ColorUtil.hue2rad(hsv[0]), hsv[1], hsv[2]);
+          this.$emit('input', colors);
+        }.bind(this);
+        var mouseupHandler = function(event) {
+          $(document).off('mousemove', mousemoveHandler).
+            off('mouseup', mouseupHandler);
+        }.bind(this);
+        $(document).on('mousemove', mousemoveHandler).
+          on('mouseup', mouseupHandler);
+      },
+      hsv_changeHandler: function(event, hsvIndex, scale) {
+        var targetHandle = this.colorHandles[this.selectedIndex];
+        if (!targetHandle) {
+          return;
+        }
+        var editor = this.hsvEditor(targetHandle.i);
+        var value = +event.target.value / scale;
+        var hsv = targetHandle.hsv.slice();
+        if (!isNaN(value) ) {
+          hsv[0] = hsvIndex == 0? value : hsv[0];
+          hsv[1] = hsvIndex == 1? value : hsv[1];
+          hsv[2] = hsvIndex == 2? value : hsv[2];
+        }
+        var colors = editor.getColors(
+            ColorUtil.hue2rad(hsv[0]), hsv[1], hsv[2]);
         this.$emit('input', colors);
       },
       picker_mouseoverHandler: function(event) {
@@ -785,11 +811,32 @@
         this.selectedIndex = colors.length > 0? 0 : -1;
         this.$emit('input', colors);
       },
+      hsvEditor : function(targetIndex) {
+        var colorHandles = this.colorHandles.slice();
+        return {
+          getColors: function(t, s, v) {
+            var dr = t - ColorUtil.hue2rad(colorHandles[targetIndex].hsv[0]);
+            var ds = s / colorHandles[targetIndex].hsv[1]; // ratio
+            var colors = this.colors.slice();
+            colors.forEach(function(_, i) {
+              if (i == targetIndex || this.linked) {
+                var hsv = colorHandles[i].hsv.slice();
+                hsv[0] = ColorUtil.rad2hue(ColorUtil.hue2rad(hsv[0]) + dr);
+                if (i == targetIndex) {
+                  hsv[1] = s;
+                  hsv[2] = v;
+                } else if (this.linked && targetIndex == 0) {
+                  hsv[1] = Math.min(hsv[1] * ds, 1);
+                }
+                colors[i] = ColorUtil.rgb2hex.apply(null,
+                    ColorUtil.hsv2rgb.apply(null, hsv) );
+              }
+            }.bind(this) );
+            return colors;
+          }.bind(this)
+        };
+      },
       picker_mousedownHandler_move_handle: function(event, $el) {
-
-        event.preventDefault();
-        var targetIndex = +$el.getAttribute('x-colorHandle-index');
-        this.setSelectedIndex(targetIndex);
 
         var mousemoveHandler = function(event) {
           var deltaX = event.pageX - dragPoint.x;
@@ -797,30 +844,13 @@
           var x = lastPos.x + deltaX;
           var y = lastPos.y + deltaY;
           var r = this.size / 2;
-          var h = ColorUtil.rad2hue(Math.atan2(-y, x) );
+          var t = Math.atan2(-y, x);
           var s = Math.sqrt(x * x + y * y) / r;
           if (s > 1) {
             s = 1;
           }
-          var dh = h - colorHandles[targetIndex].hsv[0];
-          var ds = s / colorHandles[targetIndex].hsv[1]; // ratio
-          var colors = this.colors.slice();
-          colors.forEach(function(_, i) {
-            if (colorHandle.i == i || this.linked) {
-              var hsv = colorHandles[i].hsv.slice();
-              hsv[0] = (hsv[0] + dh) % 360;
-              if (colorHandle.i == i) {
-                hsv[1] = s;
-              } else if (this.linked) {
-                hsv[1] = Math.min(hsv[1] * ds, 1);
-              }
-              var color = ColorUtil.rgb2hex.apply(null,
-                  ColorUtil.hsv2rgb.apply(null, hsv) );
-              colors[i] = color;
-            }
-          }.bind(this) );
+          var colors = editor.getColors(t, s, targetHandle.hsv[2]);
           this.$emit('input', colors);
-
         }.bind(this);
 
         var mouseupandler = function(event) {
@@ -828,9 +858,12 @@
             off('mouseup', mouseupandler);
         }.bind(this);
 
-        var colorHandles = this.colorHandles.slice();
-        var colorHandle = colorHandles[targetIndex];
-        var lastPos = { x: colorHandle.x, y: colorHandle.y };
+        event.preventDefault();
+        var targetIndex = +$el.getAttribute('x-colorHandle-index');
+        this.setSelectedIndex(targetIndex);
+        var editor = this.hsvEditor(targetIndex);
+        var targetHandle = this.colorHandles[targetIndex];
+        var lastPos = { x: targetHandle.x, y: targetHandle.y };
         var dragPoint = { x: event.pageX, y: event.pageY };
         $(document).on('mousemove', mousemoveHandler).
           on('mouseup', mouseupandler);
