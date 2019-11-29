@@ -586,7 +586,7 @@
               ' @mouseover="button_mouseHandler($event, i)"' +
               ' @mouseout="button_mouseHandler($event, i)"' +
               ' @mousedown="button_mouseHandler($event, i)"' +
-              ' @mouseup="button_mouseHandler($event, i)">' +
+              ' @click="button_mouseHandler($event, i)">' +
             '<color-pointer :width="24" :height="24"' +
               ' :add="i == 0" :shadow="false" fill="#ccc" ></color-pointer>' +
             '<svg style="position:absolute;left:0px;top:0px;"' +
@@ -705,8 +705,12 @@
           state.over = false;
         } else if (event.type == 'mousedown') {
           state.down = true;
-        } else if (event.type == 'mouseup') {
-          state.down = false;
+          var mouseupHandler = function() {
+            $(document).off('mouseup', mouseupHandler);
+            state.down = false;
+          };
+          $(document).on('mouseup', mouseupHandler);
+        } else if (event.type == 'click') {
           this.buttonMode = this.buttonMode != state.mode? state.mode: '';
         }
       },
