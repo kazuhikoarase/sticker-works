@@ -853,6 +853,7 @@
           getColors: function(t, s, v) {
             var dr = t - ColorUtil.hue2rad(colorMarkers[targetIndex].hsv[0]);
             var ds = s / colorMarkers[targetIndex].hsv[1]; // ratio
+            var dv = v / colorMarkers[targetIndex].hsv[2]; // ratio
             var colors = this.colors.slice();
             colors.forEach(function(_, i) {
               if (i == targetIndex || this.linked) {
@@ -863,6 +864,7 @@
                   hsv[2] = v;
                 } else if (this.linked && targetIndex == 0) {
                   hsv[1] = Math.min(hsv[1] * ds, 1);
+                  hsv[2] = Math.min(hsv[2] * dv, 1);
                 }
                 colors[i] = ColorUtil.rgb2hex.apply(null,
                     ColorUtil.hsv2rgb.apply(null, hsv) );
