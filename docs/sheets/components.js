@@ -167,7 +167,7 @@
       rad2hue: rad2hue, hue2rad: hue2rad
     };
   }();
-
+console.log(ColorUtil.rgb2hsv(255,255,255))
   var components = {};
 
   components['resizable-border'] = {
@@ -617,7 +617,7 @@
       };
     },
     watch: {
-      prepareHandles: function() {},
+      prepareMarkers: function() {},
       buttonMode: function(newVal) {
         this.$refs.colorEditor.style.cursor = newVal?
             this.getCursor(newVal == 'add') : '';
@@ -641,7 +641,7 @@
         var s = this.size / 2 + this.margin;
         return -s + ' ' + -s + ' ' + s * 2 + ' ' + s * 2;
       },
-      prepareHandles: function() {
+      prepareMarkers: function() {
         var r = this.size / 2;
         this.colorMarkers = this.colors.map(function(color, i) {
           var rgb = ColorUtil.hex2rgb(color);
