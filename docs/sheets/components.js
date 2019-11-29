@@ -546,13 +546,13 @@
             ' :viewBox.camel="viewBox">' +
             '<circle cx="0" cy="0" :r="size / 2 + 2"' +
             ' fill="none" stroke="white" stroke-width="4" />' +
-            '<path v-for="c in colorHandles" :d="pathLine(c.x, c.y)"' +
+            '<path v-for="c in colorMarkers" :d="pathLine(c.x, c.y)"' +
               ' fill="none" stroke="black"' +
               ' :stroke-dasharray="linked?\'\':\'2\'"' +
               ' :stroke-width="c.i == overIndex? 2 : 1" />' +
-            '<g :style="colorHandleStyle" v-for="c in colorHandles"' +
+            '<g :style="colorMarkerStyle" v-for="c in colorMarkers"' +
               ' :transform="\'translate(\' + c.x + \' \' + c.y + \')\'"' +
-              ' :x-colorHandle-index="c.i">' +
+              ' :x-color-marker-index="c.i">' +
               '<circle :r="c.r + (c.i == selectedIndex? 3 : 1)' +
               ' + (c.i == overIndex? 1 : 0)"' +
                 ' fill="black" stroke="none"/>' +
@@ -561,7 +561,7 @@
           '</svg>' +
         '</div>' +
         '<div style="display:inline-block;float:left;">' +
-          '<div tabindex="0" v-for="c in colorHandles"' +
+          '<div tabindex="0" v-for="c in colorMarkers"' +
             ' style="display:inline-block;line-height:1;' +
               'border:1px solid #000;outline:none;"' +
             ' @click="setSelectedIndex(c.i)">' +
@@ -608,7 +608,7 @@
         linked: true,
         overIndex: -1,
         selectedIndex: 0,
-        colorHandles: [],
+        colorMarkers: [],
         buttonMode: '',
         buttonStates: [
           { down: false, over: false, mode: 'add' },
@@ -626,8 +626,8 @@
     computed: {
       colors: function() { return this.value; },
       hsvSliders: function() {
-        var colorHandle = this.colorHandles[this.selectedIndex];
-        var values = colorHandle? colorHandle.hsv : [0, 0, 0];
+        var colorMarker = this.colorMarkers[this.selectedIndex];
+        var values = colorMarker? colorMarker.hsv : [0, 0, 0];
         return [
           { label: 'H', max: '360', step: '0.01', scale: 1, unit: '°' },
           { label: 'S', max: '1', step: '0.01', scale: 100, unit: '%' },
@@ -643,7 +643,7 @@
       },
       prepareHandles: function() {
         var r = this.size / 2;
-        this.colorHandles = this.colors.map(function(color, i) {
+        this.colorMarkers = this.colors.map(function(color, i) {
           var rgb = ColorUtil.hex2rgb(color);
           var hsv = ColorUtil.rgb2hsv.apply(null, rgb);
           var t = ColorUtil.hue2rad(hsv[0]);
@@ -653,7 +653,7 @@
         }.bind(this) );
         return [ this.size, this.colors ];
       },
-      colorHandleStyle: function() {
+      colorMarkerStyle: function() {
         return this.buttonMode? {} : { cursor: 'move' };
       }
     },
@@ -715,15 +715,15 @@
         }
       },
       hsv_mousedownHandler: function(event, hsvIndex, scale) {
-        var targetHandle = this.colorHandles[this.selectedIndex];
-        if (!targetHandle) {
+        var targetMarker = this.colorMarkers[this.selectedIndex];
+        if (!targetMarker) {
           return;
         }
-        var editor = this.hsvEditor(targetHandle.i);
+        var editor = this.hsvEditor(targetMarker.i);
         var target = event.target;
         var mousemoveHandler = function(event) {
           var value = +target.value / scale;
-          var hsv = targetHandle.hsv.slice();
+          var hsv = targetMarker.hsv.slice();
           if (!isNaN(value) ) {
             hsv[0] = hsvIndex == 0? value : hsv[0];
             hsv[1] = hsvIndex == 1? value : hsv[1];
@@ -741,13 +741,13 @@
           on('mouseup', mouseupHandler);
       },
       hsv_changeHandler: function(event, hsvIndex, scale) {
-        var targetHandle = this.colorHandles[this.selectedIndex];
-        if (!targetHandle) {
+        var targetMarker = this.colorMarkers[this.selectedIndex];
+        if (!targetMarker) {
           return;
         }
-        var editor = this.hsvEditor(targetHandle.i);
+        var editor = this.hsvEditor(targetMarker.i);
         var value = +event.target.value / scale;
-        var hsv = targetHandle.hsv.slice();
+        var hsv = targetMarker.hsv.slice();
         if (!isNaN(value) ) {
           hsv[0] = hsvIndex == 0? value : hsv[0];
           hsv[1] = hsvIndex == 1? value : hsv[1];
@@ -759,32 +759,32 @@
       },
       picker_mouseoverHandler: function(event) {
         var $el = this.closest(function(elm) {
-          return elm.getAttribute('x-colorHandle-index') != null;
+          return elm.getAttribute('x-color-marker-index') != null;
         }, event);
         if (!$el) {
           return;
         }
         event.preventDefault();
-        var targetIndex = +$el.getAttribute('x-colorHandle-index');
+        var targetIndex = +$el.getAttribute('x-color-marker-index');
         this.overIndex = event.type == 'mouseover'? targetIndex : -1;
       },
       picker_mousedownHandler: function(event) {
         var $el = this.closest(function(elm) {
-          return elm.getAttribute('x-colorHandle-index') != null;
+          return elm.getAttribute('x-color-marker-index') != null;
         }, event);
         if (this.buttonMode == 'add') {
-          this.picker_mousedownHandler_add_handle(event);
+          this.picker_mousedownHandler_add_marker(event);
         } else if (this.buttonMode == 'del') {
           if ($el) {
-            this.picker_mousedownHandler_del_handle(event, $el);
+            this.picker_mousedownHandler_del_marker(event, $el);
           }
         } else {
           if ($el) {
-            this.picker_mousedownHandler_move_handle(event, $el);
+            this.picker_mousedownHandler_move_marker(event, $el);
           }
         }
       },
-      picker_mousedownHandler_add_handle: function(event) {
+      picker_mousedownHandler_add_marker: function(event) {
         event.preventDefault();
         var r = this.size / 2;
         var x = event.offsetX - r - this.margin;
@@ -802,9 +802,9 @@
         this.selectedIndex = colors.length - 1;
         this.$emit('input', colors);
       },
-      picker_mousedownHandler_del_handle: function(event, $el) {
+      picker_mousedownHandler_del_marker: function(event, $el) {
         event.preventDefault();
-        var targetIndex = +$el.getAttribute('x-colorHandle-index');
+        var targetIndex = +$el.getAttribute('x-color-marker-index');
         var colors = [];
         this.colors.forEach(function(color, i) {
           if (targetIndex != i) {
@@ -815,16 +815,48 @@
         this.selectedIndex = colors.length > 0? 0 : -1;
         this.$emit('input', colors);
       },
+      picker_mousedownHandler_move_marker: function(event, $el) {
+
+        var mousemoveHandler = function(event) {
+          var deltaX = event.pageX - dragPoint.x;
+          var deltaY = event.pageY - dragPoint.y;
+          var x = lastPos.x + deltaX;
+          var y = lastPos.y + deltaY;
+          var r = this.size / 2;
+          var t = Math.atan2(-y, x);
+          var s = Math.sqrt(x * x + y * y) / r;
+          if (s > 1) {
+            s = 1;
+          }
+          var colors = editor.getColors(t, s, targetMarker.hsv[2]);
+          this.$emit('input', colors);
+        }.bind(this);
+
+        var mouseupandler = function(event) {
+          $(document).off('mousemove', mousemoveHandler).
+            off('mouseup', mouseupandler);
+        }.bind(this);
+
+        event.preventDefault();
+        var targetIndex = +$el.getAttribute('x-color-marker-index');
+        this.setSelectedIndex(targetIndex);
+        var editor = this.hsvEditor(targetIndex);
+        var targetMarker = this.colorMarkers[targetIndex];
+        var lastPos = { x: targetMarker.x, y: targetMarker.y };
+        var dragPoint = { x: event.pageX, y: event.pageY };
+        $(document).on('mousemove', mousemoveHandler).
+          on('mouseup', mouseupandler);
+      },
       hsvEditor : function(targetIndex) {
-        var colorHandles = this.colorHandles.slice();
+        var colorMarkers = this.colorMarkers.slice();
         return {
           getColors: function(t, s, v) {
-            var dr = t - ColorUtil.hue2rad(colorHandles[targetIndex].hsv[0]);
-            var ds = s / colorHandles[targetIndex].hsv[1]; // ratio
+            var dr = t - ColorUtil.hue2rad(colorMarkers[targetIndex].hsv[0]);
+            var ds = s / colorMarkers[targetIndex].hsv[1]; // ratio
             var colors = this.colors.slice();
             colors.forEach(function(_, i) {
               if (i == targetIndex || this.linked) {
-                var hsv = colorHandles[i].hsv.slice();
+                var hsv = colorMarkers[i].hsv.slice();
                 hsv[0] = ColorUtil.rad2hue(ColorUtil.hue2rad(hsv[0]) + dr);
                 if (i == targetIndex) {
                   hsv[1] = s;
@@ -839,38 +871,6 @@
             return colors;
           }.bind(this)
         };
-      },
-      picker_mousedownHandler_move_handle: function(event, $el) {
-
-        var mousemoveHandler = function(event) {
-          var deltaX = event.pageX - dragPoint.x;
-          var deltaY = event.pageY - dragPoint.y;
-          var x = lastPos.x + deltaX;
-          var y = lastPos.y + deltaY;
-          var r = this.size / 2;
-          var t = Math.atan2(-y, x);
-          var s = Math.sqrt(x * x + y * y) / r;
-          if (s > 1) {
-            s = 1;
-          }
-          var colors = editor.getColors(t, s, targetHandle.hsv[2]);
-          this.$emit('input', colors);
-        }.bind(this);
-
-        var mouseupandler = function(event) {
-          $(document).off('mousemove', mousemoveHandler).
-            off('mouseup', mouseupandler);
-        }.bind(this);
-
-        event.preventDefault();
-        var targetIndex = +$el.getAttribute('x-colorHandle-index');
-        this.setSelectedIndex(targetIndex);
-        var editor = this.hsvEditor(targetIndex);
-        var targetHandle = this.colorHandles[targetIndex];
-        var lastPos = { x: targetHandle.x, y: targetHandle.y };
-        var dragPoint = { x: event.pageX, y: event.pageY };
-        $(document).on('mousemove', mousemoveHandler).
-          on('mouseup', mouseupandler);
       },
       closest: function(fn, event, root) {
         if (!root) {
