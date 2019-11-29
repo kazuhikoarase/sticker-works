@@ -39,25 +39,41 @@
     }
     var coords = [
       [0, 0],
-      [Math.PI * 2.00, 360]
+      [0.453, 15],
+      [0.895, 30],
+      [1.472, 45],
+      [2.080, 60],
+      [2.493, 90],
+      [2.912, 120],
+      [3.295, 150],
+      [3.644, 180],
+      [3.995, 210],
+      [4.485, 240],
+      [5.115, 270],
+      [5.531, 300],
+      [5.899, 330],
+      [Math.PI * 2, 360]
     ];
     var lastCoords = coords[coords.length - 1];
-    var rad2hue = function(value, reverse) {
-      var src = reverse? 1 : 0;
-      var dst = reverse? 0 : 1;
-      value = value % lastCoords[src];
-      if (value < 0) {
-        value += lastCoords[src];
-      }
-      for (var i = 1; i < coords.length; i += 1) {
-        var c1 = coords[i - 1];
-        var c2 = coords[i];
-        if (c1[src] <= value && value < c2[src]) {
-          return (value - c1[src]) / (c2[src] - c1[src]) * (c2[dst] - c1[dst]) + c1[dst];
+    var coordsFunc = function(src, dst) {
+      return function(value) {
+        value = value % lastCoords[src];
+        if (value < 0) {
+          value += lastCoords[src];
         }
-      }
-      return 0;
+        for (var i = 1; i < coords.length; i += 1) {
+          var c1 = coords[i - 1];
+          var c2 = coords[i];
+          if (c1[src] <= value && value < c2[src]) {
+            return (value - c1[src]) / (c2[src] - c1[src]) *
+              (c2[dst] - c1[dst]) + c1[dst];
+          }
+        }
+        return 0;
+      };
     };
+    var rad2hue = coordsFunc(0, 1);
+    var hue2rad = coordsFunc(1, 0);
     //
     var unit2ff = function(v) { return Math.floor(v * 255); };
     var ff2unit = function(v) { return v / 255; };
@@ -147,7 +163,8 @@
       rgb2hex: rgb2hex, hex2rgb: hex2rgb,
       hsl2rgb: hsl2rgb, rgb2hsl: rgb2hsl,
       hsv2rgb: hsv2rgb, rgb2hsv: rgb2hsv,
-      color2rgb: color2rgb, rad2hue: rad2hue
+      color2rgb: color2rgb,
+      rad2hue: rad2hue, hue2rad: hue2rad
     };
   }();
 
@@ -618,7 +635,7 @@
         this.colorHandles = this.colors.map(function(color, i) {
           var rgb = ColorUtil.hex2rgb(color);
           var hsv = ColorUtil.rgb2hsv.apply(null, rgb);
-          var t = hsv[0] / 180 * Math.PI;
+          var t = ColorUtil.hue2rad(hsv[0]);
           var x = Math.cos(t) * r * hsv[1];
           var y = -Math.sin(t) * r * hsv[1];
           return { i: i, x: x, y: y, r: i == 0? 10 : 6, hsv: hsv };
@@ -732,10 +749,7 @@
         var x = event.offsetX - r - this.margin;
         var y = event.offsetY - r - this.margin;
         var s = Math.sqrt(x * x + y * y) / r;
-        var h = Math.atan2(-y, x) * 180 / Math.PI;
-        if (h < 0) {
-          h += 360;
-        }
+        var h = ColorUtil.rad2hue(Math.atan2(-y, x) );
         if (s > 1) {
           return;
         }
@@ -772,10 +786,7 @@
           var x = lastPos.x + deltaX;
           var y = lastPos.y + deltaY;
           var r = this.size / 2;
-          var h = Math.atan2(-y, x) * 180 / Math.PI;
-          if (h < 0) {
-            h += 360;
-          }
+          var h = ColorUtil.rad2hue(Math.atan2(-y, x) );
           var s = Math.sqrt(x * x + y * y) / r;
           if (s > 1) {
             s = 1;
