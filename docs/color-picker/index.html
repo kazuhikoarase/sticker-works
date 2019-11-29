@@ -17,16 +17,15 @@
       </svg>
       <div style="float:left;margin-left:4px;">
         <textarea style="width:10rem;height:10rem;" :readonly="true"
-                  :value="JSON.stringify(pixels, null, 2)" ></textarea>
+                  :value="JSON.stringify(pixels, null, 2)"
+                  title="switch to QR" @click="mode='qr'" ></textarea>
         <br/>
-        <input type="text" style="width:4rem;" :readonly="true" :value="bgColor" />
+        <input type="text" style="width:4rem;" :readonly="true"
+          :value="bgColor" title="switch to BgColor" @click="mode='bg'" />
       </div>
       <br style="clear:both;"/>
       <div style="display: inline-block;border-radius: 6px; 
           margin-top: 4px;padding: 4px;border: 1px solid #ccc;">
-        <label><input type="radio" v-model="mode" value="qr" />QR</label>
-        <label><input type="radio" v-model="mode" value="bg" />BgColor</label>
-        <br/>
         <color-picker :size="216" :value="mode == 'qr'? pixels : [bgColor]"
           @input="inputHandler"></color-picker>
       </div>
