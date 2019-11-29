@@ -536,7 +536,8 @@
           '<color-pointer ref="delPointer" style="display:none;" fill="none"' +
           ' :width="24" :height="24" :add="false"></color-pointer>' +
           '<color-circle :size="size" :style="{ margin: margin + \'px\' }"/>' +
-          '<svg ref="colorEditor" style="position:absolute;left:0px;top:0px;"' +
+          '<svg tabindex="0" ref="colorEditor"' +
+          ' style="position:absolute;left:0px;top:0px;outline:none;"' +
           ' @mousedown="picker_mousedownHandler($event)"' +
           ' @mouseover="picker_mouseoverHandler($event)"' +
           ' @mouseout="picker_mouseoverHandler($event)"' +
@@ -544,7 +545,7 @@
             ' :viewBox.camel="viewBox">' +
             '<path v-for="c in colorHandles" :d="pathLine(c.x, c.y)"' +
               ' fill="none" stroke="black" :stroke-dasharray="linked?\'\':\'2\'" />' +
-            '<g v-for="c in colorHandles"' +
+            '<g :style="colorHandleStyle" v-for="c in colorHandles"' +
               ' :transform="\'translate(\' + c.x + \' \' + c.y + \')\'"' +
               ' :x-colorHandle-index="c.i">' +
               '<circle :r="c.r + (c.i == selectedIndex? 3 : 1)' +
@@ -555,31 +556,36 @@
           '</svg>' +
         '</div>' +
         '<div style="display:inline-block;float:left;">' +
-          '<div v-for="c in colorHandles"' +
-            ' style="display:inline-block;line-height:1;border:1px solid #000;"' +
-          ' @mousedown.prevent @click="setSelectedIndex(c.i)">' +
+          '<div tabindex="0" v-for="c in colorHandles"' +
+            ' style="display:inline-block;line-height:1;' +
+              'border:1px solid #000;outline:none;"' +
+            ' @click="setSelectedIndex(c.i)">' +
             '<div :style="colorChooserStyle(c)"></div>' +
           '</div>' +
           '<template v-for="(hs, i) in hsvSliders" >' +
             '<br/><label><input type="range"' +
               ' style="width:100px;vertical-align:middle;"' +
               ' min="0" :max="hs.max" :step="hs.step" :value="hs.value"' +
-              ' @input="hsv_inputHandler($event, i)" />' +
+              ' @input="hsv_inputHandler($event, i, 1)" />' +
             '<span style="vertical-align:middle;">' +
-            '{{hs.label}} {{formatNumber(hs.scale * hs.value, 2)}}{{hs.unit}}' +
+            '{{hs.label}} <input type="text" style="text-align:right;width:3rem;"' +
+            ' :value="formatNumber(hs.value * hs.scale, 2)"' +
+            ' @focus="$event.target.select()"' +
+            ' @change="hsv_inputHandler($event, i, hs.scale)" />{{hs.unit}}' +
             '</span></label>' +
           '</template>' +
           '<br/><label><input type="checkbox" v-model="linked" />Linked</label>' +
-          '<br/><div v-for="(button, i) in buttonStates"' +
-              ' style="margin-right:4px;line-height:1;position:relative;display:inline-block;"' +
+          '<br/><div tabindex="0" v-for="(button, i) in buttonStates"' +
+              ' style="margin-right:4px;line-height:1;position:relative;' +
+                'display:inline-block;outline:none;"' +
               ' @mouseover="button_mouseHandler($event, i)"' +
               ' @mouseout="button_mouseHandler($event, i)"' +
               ' @mousedown="button_mouseHandler($event, i)"' +
               ' @mouseup="button_mouseHandler($event, i)">' +
-            '<color-pointer style="position:absolute;left:0px;top:0px;"' +
-              ' :width="24" :height="24"' +
+            '<color-pointer :width="24" :height="24"' +
               ' :add="i == 0" :shadow="false" fill="#ccc" ></color-pointer>' +
-            '<svg width="24" height="24" :viewBox.camel="\'0 0 16 16\'" >' +
+            '<svg style="position:absolute;left:0px;top:0px;"' +
+              ' width="24" height="24" :viewBox.camel="\'0 0 16 16\'" >' +
               '<rect :opacity="0.2" v-if="buttonOverlay(i)"' +
               ' fill="#0cf" stroke="#00c" x="0.5" y="0.5" width="15" height="15" />' +
             '</svg>' +
@@ -641,6 +647,9 @@
           return { i: i, x: x, y: y, r: i == 0? 10 : 6, hsv: hsv };
         }.bind(this) );
         return [ this.size, this.colors ];
+      },
+      colorHandleStyle: function() {
+        return this.buttonMode? {} : { cursor: 'move' };
       }
     },
     methods: {
@@ -690,20 +699,22 @@
         } else if (event.type == 'mouseout') {
           state.over = false;
         } else if (event.type == 'mousedown') {
-          event.preventDefault();
           state.down = true;
         } else if (event.type == 'mouseup') {
           state.down = false;
           this.buttonMode = this.buttonMode != state.mode? state.mode: '';
         }
       },
-      hsv_inputHandler: function(event, hsvIndex) {
+      hsv_inputHandler: function(event, hsvIndex, scale) {
         var colorHandle = this.colorHandles[this.selectedIndex];
         if (!colorHandle) {
           return;
         }
-        var value = +event.target.value;
+        var value = +event.target.value / scale;
         var delta = value - colorHandle.hsv[hsvIndex];
+        if (isNaN(delta) ) {
+          delta = 0;
+        }
         var colors = this.colors.slice();
         colors.forEach(function(_, i) {
           if (colorHandle.i == i || (this.linked && hsvIndex == 0) ) {
