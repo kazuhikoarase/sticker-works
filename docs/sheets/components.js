@@ -167,7 +167,7 @@
       rad2hue: rad2hue, hue2rad: hue2rad
     };
   }();
-console.log(ColorUtil.rgb2hsv(255,255,255))
+
   var components = {};
 
   components['resizable-border'] = {
