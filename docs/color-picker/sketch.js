@@ -4,12 +4,12 @@ new Vue({
     mode: 'qr',
     bgColor: '#ffffff',
     pixels: [
-      "#ff3c00",
-      "#ffc500",
-      "#07ff00",
-      "#007aff",
-      "#2a00ff",
-      "#ff00e3"
+      "#ff0000",
+      "#ffff00",
+      "#00ff00",
+      "#00ffff",
+      "#0000ff",
+      "#ff00ff"
     ]
   },
   methods: {
