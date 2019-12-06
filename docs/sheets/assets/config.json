@@ -42,5 +42,6 @@
   "pixels": [
     "#000"
   ],
-  "bgColor": "#fff"
+  "bgColor": "#ccf",
+  "bgSelector": "[fill='#eee']"
 }

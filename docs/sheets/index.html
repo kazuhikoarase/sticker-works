@@ -88,7 +88,8 @@
                   <rect v-if="config.showBgBox" :width="stickerWidth" :height="stickerHeight"
                         fill="none" stroke="black" stroke-width="0.5" />
                   <!-- qrcode -->
-                  <qrcode v-for="qr in sticker.qrs" :data="qr.data" :x="qr.x" :y="qr.y"
+                  <qrcode v-for="qr in sticker.qrs" :data="qr.data"
+                          :key="qr.data" :x="qr.x" :y="qr.y"
                           :size="config.qrSize" :pixels="config.pixels"
                           :type-number="config.typeNumber"
                           :error-correction-level="config.ecl" ></qrcode>

@@ -68,7 +68,8 @@ new Vue({
           this.bgSVG = data;
         }.bind(this) );
       }.bind(this) );
-    }
+    },
+    svgBgStyle: function() {}
   },
   computed: {
     sheets : function() {
@@ -137,6 +138,16 @@ new Vue({
         sheets.push({ id: getId(sheets.length + 1), stickers: stickers });
       }
       return sheets;
+    },
+    svgBgStyle: function() {
+      var config = this.config;
+      if (this.$el) {
+        var elms = this.$el.querySelectorAll('[x-bg-elm]');
+        for (var i = 0; i < elms.length; i += 1) {
+          elms[i].setAttribute('fill', config.bgColor);
+        }
+      }
+      return [ config.bgSelector, config.bgColor ];
     },
     frameStyle: function() {
       var config = this.config;
@@ -211,19 +222,27 @@ new Vue({
       config.frameHeight = Math.max(0, this.lastState.frameHeight + dy);
     },
     svg_loadHandler: function(event) {
-      var viewBox = (event.svg.getAttribute('viewBox') || '').split(/\s/g);
-      if (viewBox.length != 4) {
-        return;
-      }
       var config = this.config;
-      [ 'stickerWidth', 'stickerHeight' ].forEach(function(p, i) {
-        if (config[p] == 0) {
-          var v = +this.pixel2mm(viewBox[2 + i]);
-          if (this[p] != v) {
-            this[p] = v;
-          }
+      var svg = event.svg;
+      if (config.bgSelector) {
+        var bgElms = svg.querySelectorAll(config.bgSelector);
+        for (var i = 0; i < bgElms.length; i += 1) {
+          bgElms[i].setAttribute('x-bg-elm', 'x-bg-elm');
+          bgElms[i].setAttribute('fill', config.bgColor);
         }
-      }.bind(this) );
+      }
+      var viewBox = (svg.getAttribute('viewBox') || '').split(/\s/g);
+      if (viewBox.length == 4) {
+        var config = this.config;
+        [ 'stickerWidth', 'stickerHeight' ].forEach(function(p, i) {
+          if (config[p] == 0) {
+            var v = +this.pixel2mm(viewBox[2 + i]);
+            if (this[p] != v) {
+              this[p] = v;
+            }
+          }
+        }.bind(this) );
+      }
     },
     download_clickHandler: function(index, id) {
       var config = this.config;

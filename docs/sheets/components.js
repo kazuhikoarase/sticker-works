@@ -363,30 +363,37 @@
   };
 
   components['x-svg'] = {
-    template: '<g v-html="svg"></g>',
+    template: '<g></g>',
     props: {
-      svg: { default: '' },
-      x: { default: 0 },
-      y: { default: 0 },
-      width: { default: 100 },
-      height: { default: 100 }
+      svg: { default: '', type: String },
+      x: { default: 0, type: Number },
+      y: { default: 0, type: Number },
+      width: { default: 100, type: Number },
+      height: { default: 100, type: Number }
     },
+    data: function() { return { mounted: false }; },
     watch: { layout: function() {} },
     computed: {
       layout: function() {
-        this.$nextTick(function() {
-          var svg = this.$el? this.$el.firstChild : null;
-          if (svg) {
-            [ 'x', 'y', 'width', 'height' ].
-            forEach(function(p) {
-              svg.setAttribute(p, '' + this[p]);
-            }.bind(this) );
-            this.$emit('load', { svg: svg });
-          }
-          return svg;
-        });
-        return [ this.svg, this.x, this.y, this.width, this.height ];
+        if (this.$el) {
+          this.$el.innerHTML = this.svg;
+          this.$nextTick(function() {
+            var svg = this.$el.firstChild;
+            if (svg) {
+              [ 'x', 'y', 'width', 'height' ].
+              forEach(function(p) {
+                svg.setAttribute(p, '' + this[p]);
+              }.bind(this) );
+              this.$emit('load', { svg: svg });
+            }
+          });
+        }
+        return [ this.svg, this.x, this.y, this.width, this.height,
+          this.mounted ];
       }
+    },
+    mounted: function() {
+      this.mounted = true;
     }
   };
 
