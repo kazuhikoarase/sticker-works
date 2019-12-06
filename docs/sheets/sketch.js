@@ -145,6 +145,7 @@ new Vue({
         var elms = this.$el.querySelectorAll('[x-bg-elm]');
         for (var i = 0; i < elms.length; i += 1) {
           elms[i].setAttribute('fill', config.bgColor);
+          elms[i].style.fill = config.bgColor;
         }
       }
       return [ config.bgSelector, config.bgColor ];
@@ -229,6 +230,7 @@ new Vue({
         for (var i = 0; i < bgElms.length; i += 1) {
           bgElms[i].setAttribute('x-bg-elm', 'x-bg-elm');
           bgElms[i].setAttribute('fill', config.bgColor);
+          bgElms[i].style.fill =  config.bgColor;
         }
       }
       var viewBox = (svg.getAttribute('viewBox') || '').split(/\s/g);
