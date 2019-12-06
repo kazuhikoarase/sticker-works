@@ -10,6 +10,8 @@ new Vue({
     lastState: {},
     grabbing: false,
     bgSVG: '',
+    colorEditorVisible: false,
+    colorEditor: {},
     zoomSet: [
       { value: '0.05', label: '5%' },
       { value: '0.1', label: '10%' },
@@ -238,6 +240,18 @@ new Vue({
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
+    },
+    setColorEditorVisible: function(colorEditorVisible, apply) {
+      if (colorEditorVisible) {
+        this.colorEditor.pixels = this.config.pixels;
+        this.colorEditor.bgColor = this.config.bgColor;
+      } else {
+        if (apply) {
+          this.config.pixels = this.colorEditor.pixels;
+          this.config.bgColor = this.colorEditor.bgColor;
+        }
+      }
+      this.colorEditorVisible = colorEditorVisible;
     },
     loadResource: function(url, loadHandler) {
       var xhr = new window.XMLHttpRequest();

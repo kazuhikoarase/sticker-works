@@ -24,6 +24,7 @@
               v-model="config.showBgBox" />Show Bg Box(Artboard)</label>
             <label @mousedown.prevent><input type="checkbox"
               v-model="config.rotate" />Rotate</label>
+            <button @click="setColorEditorVisible(true)"> Edit Colors </button>
           </div>
           <div style="margin-bottom:4px;white-space:nowrap;">
             <label>ErrorCorrectionLevel:<select v-model="config.ecl">
@@ -97,6 +98,14 @@
           </div>
         </div>
       </div>
+      <modal-dialog ref="colorEditor" v-if="colorEditorVisible"
+          @close="setColorEditorVisible(false)">
+        <qrcode-color-editor v-model="colorEditor"></qrcode-color-editor>
+        <div style="text-align:center;margin-top:4px;">
+          <button @click="setColorEditorVisible(false, true)"> Apply </button>
+          <button @click="setColorEditorVisible(false)"> Cancel </button>
+        </div>
+      </modal-dialog>
     </div>
     <br style="clear:both;" />
     <div style="height:200px;"></div>

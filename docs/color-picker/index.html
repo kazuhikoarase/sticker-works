@@ -9,40 +9,7 @@
   </head>
   <body>
     <div id="app" v-cloak>
-      <div ref="svgHolder" style="display:none;">
-        <svg xmlns="http://www.w3.org/2000/svg"
-             :width="( (pixels.length * 110) + 10) + 'px'"
-             height="120px"
-             :view-box.camel="'0 0 ' + ( (pixels.length * 110) + 10) + ' 120'"
-             >
-          <rect :fill="bgColor" :width="( (pixels.length * 110) + 10)" height="120"/>
-          <rect :x="10 + 110 * i" y="10" width="100" height="100" :fill="c" v-for="(c, i) in pixels" />
-        </svg>
-      </div>
-      <button @click="download_clickHandler"> download color sample </button>
-      <br/>
-      <svg style="float:left;" width="120" height="120">
-        <rect width="120" height="120" :fill="displayBgColor" stroke="none" />
-        <g transform="translate(10, 10)">
-          <qrcode :size="100" :pixels="displayPixels"></qrcode>
-        </g>
-      </svg>
-      <div style="float:left;margin-left:4px;">
-        <textarea style="width:10rem;height:10rem;" :readonly="true"
-                  :value="JSON.stringify(pixels, null, 2)"
-                  title="switch to QR" @click="mode='qr'" ></textarea>
-        <br/>
-        <input type="text" style="width:4rem;" :readonly="true"
-          :value="bgColor" title="switch to BgColor" @click="mode='bg'" />
-        <label><input type="checkbox" v-model="fakeCmyk" />Fake CMYK</label>
-      </div>
-      <br style="clear:both;"/>
-      <div style="display: inline-block;border-radius: 6px; 
-          margin-top: 4px;padding: 4px;border: 1px solid #ccc;">
-        <color-picker ref="picker" :size="216" 
-          :value="mode == 'qr'? pixels : [bgColor]"
-          :fake-cmyk="fakeCmyk" @input="inputHandler"></color-picker>
-      </div>
+      <qrcode-color-editor v-model="colorData"></qrcode-color-editor>
     </div>
     <script src="../sheets/components.js"></script>
     <script src="sketch.js"></script>

@@ -41,5 +41,6 @@
   "// pixel colors for QR code.": "",
   "pixels": [
     "#000"
-  ]
+  ],
+  "bgColor": "#fff"
 }
