@@ -10,6 +10,8 @@ new Vue({
     lastState: {},
     grabbing: false,
     bgSVG: '',
+    bgUpdate: 0,
+    showGuide: true,
     colorEditorVisible: false,
     colorEditor: {},
     zoomSet: [
@@ -142,13 +144,21 @@ new Vue({
     svgBgStyle: function() {
       var config = this.config;
       if (this.$el) {
-        var elms = this.$el.querySelectorAll('[x-bg-elm]');
-        for (var i = 0; i < elms.length; i += 1) {
+        var i, elms;
+        elms = this.$el.querySelectorAll('[x-bg-elm]');
+        for (i = 0; i < elms.length; i += 1) {
           elms[i].setAttribute('fill', config.bgColor);
           elms[i].style.fill = config.bgColor;
         }
+        if (config.guideSelector) {
+          elms = this.$el.querySelectorAll(config.guideSelector);
+          for (i = 0; i < elms.length; i += 1) {
+            elms[i].style.display = this.showGuide? '' : 'none';
+          }
+        }
       }
-      return [ config.bgSelector, config.bgColor ];
+      return [ config.bgSelector, config.bgColor, this.bgUpdate,
+               config.guideSelector, this.showGuide ];
     },
     frameStyle: function() {
       var config = this.config;
@@ -229,9 +239,8 @@ new Vue({
         var bgElms = svg.querySelectorAll(config.bgSelector);
         for (var i = 0; i < bgElms.length; i += 1) {
           bgElms[i].setAttribute('x-bg-elm', 'x-bg-elm');
-          bgElms[i].setAttribute('fill', config.bgColor);
-          bgElms[i].style.fill =  config.bgColor;
         }
+        this.bgUpdate = +new Date();
       }
       var viewBox = (svg.getAttribute('viewBox') || '').split(/\s/g);
       if (viewBox.length == 4) {

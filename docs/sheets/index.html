@@ -23,6 +23,8 @@
             <label @mousedown.prevent><input type="checkbox"
               v-model="config.showBgBox" />Show Bg Box(Artboard)</label>
             <label @mousedown.prevent><input type="checkbox"
+              v-model="showGuide" />Show Guide</label>
+            <label @mousedown.prevent><input type="checkbox"
               v-model="config.rotate" />Rotate</label>
             <button @click="setColorEditorVisible(true)"> Edit Colors </button>
           </div>
