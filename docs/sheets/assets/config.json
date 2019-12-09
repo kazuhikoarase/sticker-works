@@ -43,5 +43,6 @@
     "#000"
   ],
   "bgColor": "#ccf",
-  "bgSelector": "[fill='#eee']"
+  "bgSelector": "[fill='#eee']",
+  "guideSelector": "[stroke-dasharray]"
 }

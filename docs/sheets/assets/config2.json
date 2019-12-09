@@ -47,5 +47,6 @@
     "#000",
     "#00c"
   ],
-  "bgColor": "#fff"
+  "bgColor": "#fff",
+  "guideSelector": "[stroke-dasharray]"
 }
