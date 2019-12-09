@@ -271,6 +271,23 @@ new Vue({
       a.click();
       document.body.removeChild(a);
     },
+    downloadAll_clickHandler: function() {
+      var config = this.config;
+      config.title = config.title.replace(/^\s+|\s+$/g, '') || 'stickers';
+      var zip = new JSZip();
+      this.sheets.forEach(function(sheet, index) {
+        var filename = config.title + '-'  + sheet.id + '.svg';
+        var content = this.$refs.svgHolder[index].innerHTML;
+        // trim white spaces.
+        content = content.replace(/^\s+|\s+$/g, '');
+        zip.file(filename, content);
+      }.bind(this) );
+      var filename = config.title + '.zip';
+      zip.generateAsync({type: 'blob'})
+        .then(function(content) {
+          saveAs(content, filename);
+        });
+    },
     setColorEditorVisible: function(colorEditorVisible, apply) {
       if (colorEditorVisible) {
         this.colorEditor.pixels = this.config.pixels;
