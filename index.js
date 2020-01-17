@@ -1,47 +1,47 @@
+// simple http server for static contents.
+
 'use strict';
 
 var http = require('http');
 var fs = require('fs');
 
-var port = 8080;
+var config = {
+  port: 8080,
+  baseDir: '/docs'
+};
 
 var mimeTypes = {
   '.txt': 'text/plain',
-  '.html': 'text/html',
-  '.css': 'text/css',
-  '.js': 'text/javascript',
-  '.json': 'application/json',
-  '.svg': 'image/svg+xml',
-  '.map': 'application/octet-stream',
-  '.woff': 'application/octet-stream'
+  '.html': 'text/html', '.css': 'text/css',
+  '.js': 'text/javascript', '.json': 'application/json',
+  '.svg': 'image/svg+xml'
 };
+var defaultContentType = 'application/octet-stream';
 
-var getHeaders = function(contentType) {
+var buildHeaders = function(contentType) {
   return {
     'Content-Type': contentType,
     // disable cache
-    'Cache-Control': 'no-cache',
-    'Pragma': 'no-cache',
-    'Expires': '0'
+    'Cache-Control': 'no-cache', 'Pragma': 'no-cache', 'Expires': '0'
   };
-}
+};
 
-var requestListener = (req, res) => {
+var server = http.createServer(function(req, res) {
   var url = req.url;
   if (url.match(/^.*\/$/) ) {
     url += 'index.html';
   }
   var path = url.replace(/^([A-Za-z0-9_\-\.\$\/]+)(.*)$/, '$1');
-  var contentType = mimeTypes[path.replace(/^.+(\.\w+)$/, '$1')];
-  if (contentType) {
-    res.writeHead(200, getHeaders(contentType) );
-    res.end(fs.readFileSync(__dirname + '/docs' + path, 'UTF-8') );
+  var filePath = __dirname + config.baseDir + path;
+  if (fs.existsSync(filePath) && fs.statSync(filePath).isFile() ) {
+    var contentType = mimeTypes[path.replace(/^.+(\.\w+)$/, '$1')] ||
+      defaultContentType;
+    res.writeHead(200, buildHeaders(contentType) );
+    res.end(fs.readFileSync(filePath) );
   } else {
-    res.writeHead(404, getHeaders('text/html') );
+    res.writeHead(404, buildHeaders('text/html') );
     res.end('<h1>Not Found</h1>');
   }
-};
-
-var server = http.createServer(requestListener);
-server.listen(port);
-console.log('server started at port ' + port);
+});
+server.listen(config.port);
+console.log('server started at port ' + config.port);
