@@ -12,8 +12,10 @@ var config = {
 
 var mimeTypes = {
   '.txt': 'text/plain',
-  '.html': 'text/html', '.css': 'text/css',
-  '.js': 'text/javascript', '.json': 'application/json',
+  '.html': 'text/html',
+  '.css': 'text/css',
+  '.js': 'text/javascript',
+  '.json': 'application/json',
   '.svg': 'image/svg+xml'
 };
 var defaultContentType = 'application/octet-stream';
@@ -22,7 +24,9 @@ var buildHeaders = function(contentType) {
   return {
     'Content-Type': contentType,
     // disable cache
-    'Cache-Control': 'no-cache', 'Pragma': 'no-cache', 'Expires': '0'
+    'Cache-Control': 'no-cache',
+    'Pragma': 'no-cache',
+    'Expires': '0'
   };
 };
 
