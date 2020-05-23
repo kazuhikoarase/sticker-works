@@ -34,6 +34,8 @@
             <label>ErrorCorrectionLevel:<select v-model="config.ecl">
               <option v-for="ecl in eclSet" :value="ecl.value">{{ecl.label}}</option>
               </select></label>
+            <label>Negative Pattern:<input type="checkbox"
+              v-model="config.negativePattern" /></label>
             <label>Zoom:<select v-model="config.zoom">
               <option v-for="zoom in zoomSet" :value="zoom.value">{{zoom.label}}</option>
               </select></label>
@@ -85,7 +87,7 @@
                    :view-box.camel="'0 0 ' + config.paperWidth + ' ' + config.paperHeight" >
                 <rect v-if="config.showPaperBox" fill="none" stroke="black"
                       stroke-width="0.5"
-                      :width="config.paperWidth" :height="config.paperHeight" />
+                      :width="config.paperWidth" :height="config.paperHeight"></rect>
                 <g v-for="sticker in sheet.stickers"
                    :transform="stickerTransform(sticker)">
                   <!-- background image -->
@@ -93,13 +95,14 @@
                          :svg="bgSVG" @load="svg_loadHandler"></x-svg>
                   <!-- background rect -->
                   <rect v-if="config.showBgBox" :width="stickerWidth" :height="stickerHeight"
-                        fill="none" stroke="black" stroke-width="0.5" />
+                        fill="none" stroke="black" stroke-width="0.5"></rect>
                   <!-- qrcode -->
                   <qrcode v-for="qr in sticker.qrs" :data="qr.data"
                           :key="qr.data" :x="qr.x" :y="qr.y"
                           :size="config.qrSize" :pixels="config.pixels"
                           :type-number="config.typeNumber"
-                          :error-correction-level="config.ecl" ></qrcode>
+                          :error-correction-level="config.ecl"
+                          :negative-pattern="config.negativePattern" ></qrcode>
                 </g>
               </svg>
             </div>

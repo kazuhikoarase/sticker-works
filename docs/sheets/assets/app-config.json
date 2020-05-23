@@ -1,6 +1,7 @@
 {
   "configSet": [
     { "title": "my config1", "url": "assets/config.json" },
-    { "title": "my config2", "url": "assets/config2.json" }
+    { "title": "my config2(multiple stickers per sheet)", "url": "assets/config2.json" },
+    { "title": "my config3(negative patttern)", "url": "assets/config3.json" }
   ]
 }

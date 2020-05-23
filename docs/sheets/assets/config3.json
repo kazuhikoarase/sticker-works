@@ -39,12 +39,12 @@
   "// ErrorCorrectionLevel": "",
   "ecl": "L",
   "// Negative Pattern false or true": "",
-  "negativePattern": false,
+  "negativePattern": true,
   "// pixel colors for QR code.": "",
   "pixels": [
-    "#000"
+    "#fff"
   ],
-  "bgColor": "#ccf",
+  "bgColor": "#333",
   "bgSelector": "[fill='#eee']",
   "guideSelector": "[stroke-dasharray]"
 }

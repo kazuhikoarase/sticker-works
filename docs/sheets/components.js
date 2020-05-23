@@ -428,6 +428,7 @@
     props: {
       typeNumber: { default: 0 },
       errorCorrectionLevel: { default: 'L', type: String },
+      negativePattern: { default: false, type: Boolean },
       data: { default: 'hi!', type: String },
       x: { default: 0, type: Number },
       y: { default: 0, type: Number },
@@ -444,6 +445,7 @@
           (qrcode.$vueCacheMap = { stat: { callCount: 0, failCount: 0 } });
         var stat = cacheMap.stat;
         var qrDataKey = [this.typeNumber, this.errorCorrectionLevel,
+                   this.negativePattern,
                    this.pixels.join(','), '', this.data].join('\n');
         var qrData = cacheMap[qrDataKey];
         stat.callCount +=1;
@@ -477,7 +479,7 @@
           ];
           for (var r = 0; r < moduleCount; r += 1) {
             for (var c = 0; c < moduleCount; c += 1) {
-              if (qr.isDark(r, c) ) {
+              if (qr.isDark(r, c) ^ this.negativePattern) {
                 var pixel = pixels[j];
                 j = (j + 1) % pixels.length;
                 posProbes.forEach(function(pp) {
