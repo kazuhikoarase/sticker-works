@@ -47,7 +47,7 @@
     "#fff",
     "#eee"
   ],
-  "bgColor": "#fff",
+  "bgColor": "#cfc",
   "bgSelector": "[fill='#eee']",
   "guideSelector": "[stroke-dasharray]"
 }

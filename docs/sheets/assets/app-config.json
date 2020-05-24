@@ -1,7 +1,10 @@
 {
   "configSet": [
-    { "title": "my config1", "url": "assets/config.json" },
-    { "title": "my config2(multiple stickers per sheet)", "url": "assets/config2.json" },
-    { "title": "my config3(with negative pixels)", "url": "assets/config3.json" }
+    { "title": "my config1",
+      "url": "assets/config.json" },
+    { "title": "my config2(multiple stickers per sheet)",
+      "url": "assets/config2.json" },
+    { "title": "my config3(with negative pixels)",
+      "url": "assets/config3.json" }
   ]
 }
