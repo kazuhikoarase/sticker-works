@@ -42,8 +42,6 @@
   "typeNumber": 0,
   "// ErrorCorrectionLevel": "",
   "ecl": "L",
-  "// Negative Pattern false or true": "",
-  "negativePattern": false,
   "// pixel colors for QR code.": "",
   "pixels": [
     "#000",

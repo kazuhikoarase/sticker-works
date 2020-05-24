@@ -38,13 +38,15 @@
   "typeNumber": 0,
   "// ErrorCorrectionLevel": "",
   "ecl": "L",
-  "// Negative Pattern false or true": "",
-  "negativePattern": true,
   "// pixel colors for QR code.": "",
   "pixels": [
-    "#fff"
+    "#009"
   ],
-  "bgColor": "#333",
+  "// negative pixel colors for QR code.": "",
+  "negativePixels": [
+    "#fff","#eee"
+  ],
+  "bgColor": "#fff",
   "bgSelector": "[fill='#eee']",
   "guideSelector": "[stroke-dasharray]"
 }
