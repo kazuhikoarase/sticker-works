@@ -42,6 +42,10 @@
   "pixels": [
     "#000"
   ],
+  "// negative pixel colors for QR code(optional).": "",
+  "// negativePixels": [
+    "#fff"
+   ],
   "bgColor": "#ccf",
   "bgSelector": "[fill='#eee']",
   "guideSelector": "[stroke-dasharray]"
