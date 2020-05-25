@@ -397,6 +397,53 @@
     }
   };
 
+  var imageLoader = function() {
+    var cache = {};
+    return {
+      load: function(href, loadHandler) {
+        if (cache[href]) {
+          loadHandler(cache[href]);
+          return;
+        }
+        var img = document.createElement('img');
+        img.style.display = 'none';
+        img.addEventListener('load', function() {
+          var ctx = document.createElement('canvas').getContext('2d');
+          ctx.canvas.width = img.width;
+          ctx.canvas.height = img.height;
+          ctx.drawImage(img, 0, 0);
+          cache[href] = ctx.canvas.toDataURL();
+          document.body.removeChild(img);
+          loadHandler(cache[href]);
+        }.bind(this) );
+        img.src = href;
+        document.body.appendChild(img);
+      }
+    };
+  }();
+
+  components['x-image'] = {
+    template: '<image xmlns:xlink="http://www.w3.org/1999/xlink"' +
+        ' preserveAspectRatio="none"' +
+        ' :x="x" :y="y" :width="width" :height="height"' +
+        ' :clip-path="clipPath" :xlink:href="dataUrl" >' +
+      '</image>',
+    props: {
+      href: { default: '', type: String },
+      x: { default: 0, type: Number },
+      y: { default: 0, type: Number },
+      width: { default: 100, type: Number },
+      height: { default: 100, type: Number },
+      clipPath: { default: '', type: String }
+    },
+    data: function() { return { dataUrl: '' }; },
+    mounted: function() {
+      imageLoader.load(this.href, function(dataUrl) {
+        this.dataUrl = dataUrl;
+      }.bind(this) );
+    }
+  };
+
   components['slider'] = {
     template: '<label>' +
       '<input ref="input" type="range" style="vertical-align:middle;width:100px;"' +
