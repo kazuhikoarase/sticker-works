@@ -83,7 +83,7 @@
                    :width="mm2pixel(config.paperWidth) + 'px'"
                    :height="mm2pixel(config.paperHeight) + 'px'"
                    :view-box.camel="'0 0 ' + config.paperWidth + ' ' + config.paperHeight" >
-                <defs>
+                <defs v-if="config.clipImage">
                   <template v-for="(sticker, s) in sheet.stickers">
                     <clipPath :id="'qrClipMask_' + i + '_' + s + '_' + q"
                               v-for="(qr, q) in sticker.qrs" >
