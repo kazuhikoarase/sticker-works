@@ -38,7 +38,7 @@
   "typeNumber": 0,
   "// ErrorCorrectionLevel": "",
   "ecl": "L",
-  "// pixel colors for QR code.": "",
+  "// pixel colors for QR code(optional).": "",
   "// pixels": [
     "#000"
   ],
@@ -46,6 +46,7 @@
   "// negativePixels": [
     "#fff"
    ],
+  "// clip image for QR code(optional).": "",
   "clipImage": "assets/qr-bg.png",
   "bgColor": "#ccf",
   "bgSelector": "[fill='#eee']",
