@@ -424,7 +424,7 @@
 
   components['x-image'] = {
     template: '<image xmlns:xlink="http://www.w3.org/1999/xlink"' +
-        ' preserveAspectRatio="none"' +
+        ' style="image-rendering:pixelated;" preserveAspectRatio="none"' +
         ' :x="x" :y="y" :width="width" :height="height"' +
         ' :clip-path="clipPath" :xlink:href="dataUrl" >' +
       '</image>',
