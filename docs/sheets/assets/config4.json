@@ -1,0 +1,52 @@
+{
+  "title": "stickers",
+  "dataUrl": "assets/URLs2.txt",
+  "bgUrl": "assets/bg.svg",
+  "// Here is the size derived from the Illustrator's Artboard size.": "",
+  "// If it is specified 0, the value is calculated from viewBox of SVG.": "",
+  "//stickerWidth": 100,
+  "//stickerHeight": 100,
+  "stickerWidth": 0,
+  "stickerHeight": 0,
+  "paperWidth": 210,
+  "paperHeight": 297,
+  "marginLeft": 10,
+  "marginRight": 10,
+  "marginTop": 15,
+  "marginBottom": 15,
+  "hGap": 10,
+  "vGap": 5,
+  "qrSize": 15,
+  "// You could define multiple qrMarginLeft then would get same number of qrcodes.": "",
+  "qrMarginLeft": [
+    {
+      "coarse": 10,
+      "fine": 0
+    }
+  ],
+  "qrMarginTop": {
+    "coarse": 7.5,
+    "fine": 0
+  },
+  "frameWidth": 1000,
+  "frameHeight": 400,
+  "showPaperBox": true,
+  "showBgBox": true,
+  "rotate": false,
+  "zoom": "2",
+  "// TypeNumber 0(auto) or 1~40": "",
+  "typeNumber": 0,
+  "// ErrorCorrectionLevel": "",
+  "ecl": "L",
+  "// pixel colors for QR code.": "",
+  "pixels": [
+    "#000"
+  ],
+  "// negative pixel colors for QR code(optional).": "",
+  "// negativePixels": [
+    "#fff"
+   ],
+  "bgColor": "#ccf",
+  "bgSelector": "[fill='#eee']",
+  "guideSelector": "[stroke-dasharray]"
+}

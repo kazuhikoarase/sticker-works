@@ -518,6 +518,76 @@
     }
   };
 
+  components['qrcode-path'] = {
+    template: '<path fill="none" stroke="none" :d="pathData" :transform="transform" />',
+    props: {
+      typeNumber: { default: 0 },
+      errorCorrectionLevel: { default: 'L', type: String },
+      negativePattern: { default: false, type: Boolean },
+      data: { default: 'hi!', type: String },
+      x: { default: 0, type: Number },
+      y: { default: 0, type: Number },
+      size: { default: 100, type: Number }
+    },
+    data: function() {
+      return { pathData: '', imgSize: 0 };
+    },
+    watch: { qrcode: function() {} },
+    computed: {
+      qrcode: function() {
+        var cacheMap = qrcode.$vueCacheMap ||
+          (qrcode.$vueCacheMap = { stat: { callCount: 0, failCount: 0 } });
+        var stat = cacheMap.stat;
+        var qrDataKey = [this.typeNumber, this.errorCorrectionLevel,
+                   this.negativePattern,
+                   '$path$', '', this.data].join('\n');
+        var qrData = cacheMap[qrDataKey];
+        stat.callCount +=1;
+        if (!qrData) {
+          stat.failCount +=1;
+          var qrKey = [this.typeNumber, this.errorCorrectionLevel,
+            '', this.data].join('\n');
+          var qr = cacheMap[qrKey];
+          stat.callCount +=1;
+          if (!qr) {
+            stat.failCount +=1;
+            // cache not found, create new
+            qr = qrcode(this.typeNumber, this.errorCorrectionLevel);
+            qr.addData(this.data);
+            qr.make();
+            cacheMap[qrKey] = qr;
+          }
+          var pathData = '';
+          var moduleCount = qr.getModuleCount();
+          for (var r = 0; r < moduleCount; r += 1) {
+            for (var c = 0; c < moduleCount; c += 1) {
+              if (qr.isDark(r, c) ^ this.negativePattern) {
+                pathData += 'M' + c + ' ' + r;
+                pathData += 'L' + (c + 1) + ' ' + r;
+                pathData += 'L' + (c + 1) + ' ' + (r + 1);
+                pathData += 'L' + c + ' ' + (r + 1);
+                pathData += 'Z ';
+              }
+            }
+          }
+          // put to cache.
+          qrData = cacheMap[qrDataKey] = {
+            pathData: pathData, imgSize: moduleCount };
+        }
+        this.pathData = qrData.pathData;
+        this.imgSize = qrData.imgSize;
+        return [ this.pathData, this.imgSize ];
+      },
+      transform: function() {
+        if (this.imgSize == 0) {
+          return '';
+        }
+        return 'translate(' + this.x + ' ' + this.y +
+          ')scale(' + this.size / this.imgSize + ')';
+      }
+    }
+  };
+
   components['color-circle'] = {
     template: '<canvas :width="size" :height="size"></canvas>',
     props: {

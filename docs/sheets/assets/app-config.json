@@ -5,6 +5,8 @@
     { "title": "my config2(multiple stickers per sheet)",
       "url": "assets/config2.json" },
     { "title": "my config3(with negative pixels)",
-      "url": "assets/config3.json" }
+      "url": "assets/config3.json" },
+    { "title": "my config4(clip test)",
+      "url": "assets/config4.json", "selected": true }
   ]
 }
