@@ -412,7 +412,7 @@
           ctx.canvas.width = img.width;
           ctx.canvas.height = img.height;
           ctx.drawImage(img, 0, 0);
-          cache[href] = ctx.canvas.toDataURL();
+          cache[href] = ctx;
           document.body.removeChild(img);
           loadHandler(cache[href]);
         }.bind(this) );
@@ -421,28 +421,6 @@
       }
     };
   }();
-
-  components['x-image'] = {
-    template: '<image xmlns:xlink="http://www.w3.org/1999/xlink"' +
-        ' style="image-rendering:pixelated;" preserveAspectRatio="none"' +
-        ' :x="x" :y="y" :width="width" :height="height"' +
-        ' :clip-path="clipPath" :xlink:href="dataUrl" >' +
-      '</image>',
-    props: {
-      href: { default: '', type: String },
-      x: { default: 0, type: Number },
-      y: { default: 0, type: Number },
-      width: { default: 100, type: Number },
-      height: { default: 100, type: Number },
-      clipPath: { default: '', type: String }
-    },
-    data: function() { return { dataUrl: '' }; },
-    mounted: function() {
-      imageLoader.load(this.href, function(dataUrl) {
-        this.dataUrl = dataUrl;
-      }.bind(this) );
-    }
-  };
 
   components['slider'] = {
     template: '<label>' +
@@ -480,10 +458,50 @@
       x: { default: 0, type: Number },
       y: { default: 0, type: Number },
       size: { default: 100, type: Number },
+      href: { default: '', type: String },
       pixels : { default: function() { return [ '#666' ] }, type: Array }
     },
     data: function() {
-      return { url: '', imgSize: 0 };
+      return { url: '', imgSize: 0, imgLoaded: false, imgCtx: null };
+    },
+    methods : {
+      createQrDataURL: function(qr, getPixelAt) {
+        var moduleCount = qr.getModuleCount();
+        var ctx = document.createElement('canvas').getContext('2d');
+        ctx.canvas.width = ctx.canvas.height = moduleCount;
+        var image = ctx.createImageData(moduleCount, moduleCount);
+        var index = 0;
+        // There are three position probe patterns
+        // at fixed position and size.
+        var posProbes = [
+          { x: 2, y: 2, pixel: null },
+          { x: moduleCount - 5, y: 2, pixel: null },
+          { x: 2, y: moduleCount - 5, pixel: null }
+        ];
+        for (var r = 0; r < moduleCount; r += 1) {
+          for (var c = 0; c < moduleCount; c += 1) {
+            if (qr.isDark(r, c) ^ this.negativePattern) {
+              var pixel = getPixelAt(r, c, moduleCount);
+              posProbes.forEach(function(pp) {
+                if (pp.x == c && pp.y == r) {
+                  pp.pixel = pixel; // store left-top pixel
+                } else if (pp.x <= c && c < pp.x + 3 &&
+                  pp.y <= r && r < pp.y + 3) {
+                  pixel = pp.pixel; // use stored pixel
+                }
+              });
+              var rgbPixel = ColorUtil.color2rgb(pixel);
+              image.data[index] = rgbPixel[0];
+              image.data[index + 1] = rgbPixel[1];
+              image.data[index + 2] = rgbPixel[2];
+              image.data[index + 3] = rgbPixel[3];
+            }
+            index += 4;
+          }
+        }
+        ctx.putImageData(image, 0, 0);
+        return ctx.canvas.toDataURL();
+      }
     },
     watch: { qrcode: function() {} },
     computed: {
@@ -493,10 +511,18 @@
         var stat = cacheMap.stat;
         var qrDataKey = [this.typeNumber, this.errorCorrectionLevel,
                    this.negativePattern,
+                   this.href,
                    this.pixels.join(','), '', this.data].join('\n');
         var qrData = cacheMap[qrDataKey];
         stat.callCount +=1;
         if (!qrData) {
+          if (this.href && !this.imgLoaded) {
+            imageLoader.load(this.href, function(ctx) {
+              this.imgCtx = ctx;
+              this.imgLoaded = true;
+            }.bind(this) );
+            return [ this.url, this.imgSize, this.imgLoaded ];
+          }
           stat.failCount +=1;
           var qrKey = [this.typeNumber, this.errorCorrectionLevel,
             '', this.data].join('\n');
@@ -510,120 +536,40 @@
             qr.make();
             cacheMap[qrKey] = qr;
           }
-          var j = 0;
-          var pixels = this.pixels;
-          var moduleCount = qr.getModuleCount();
-          var ctx = document.createElement('canvas').getContext('2d');
-          ctx.canvas.width = ctx.canvas.height = moduleCount;
-          var image = ctx.createImageData(moduleCount, moduleCount);
-          var index = 0;
-          // There are three position probe patterns
-          // at fixed position and size.
-          var posProbes = [
-            { x: 2, y: 2, pixel: null },
-            { x: moduleCount - 5, y: 2, pixel: null },
-            { x: 2, y: moduleCount - 5, pixel: null }
-          ];
-          for (var r = 0; r < moduleCount; r += 1) {
-            for (var c = 0; c < moduleCount; c += 1) {
-              if (qr.isDark(r, c) ^ this.negativePattern) {
+
+          var getPixelAt = this.href?
+            function() {
+              // grab from image.
+              var ctx = this.imgCtx;
+              var width = +ctx.canvas.width;
+              var height = +ctx.canvas.height;
+              var data = ctx.getImageData(0, 0, width, height).data;
+              return function(r, c, moduleCount) {
+                var h = Math.floor(height * r / moduleCount);
+                var w = Math.floor(width * c / moduleCount);
+                var i = (w + h * width) * 4;
+                return ColorUtil.rgb2hex(data[i], data[i + 1], data[i + 2]);
+              };
+            }.bind(this)() :
+            function() {
+              // sequence of pixels.
+              var i = 0;
+              var pixels = this.pixels;
+              return function(r, c, moduleCount) {
                 var pixel = pixels[j];
-                j = (j + 1) % pixels.length;
-                posProbes.forEach(function(pp) {
-                  if (pp.x == c && pp.y == r) {
-                    pp.pixel = pixel; // store left-top pixel
-                  } else if (pp.x <= c && c < pp.x + 3 &&
-                    pp.y <= r && r < pp.y + 3) {
-                    pixel = pp.pixel; // use stored pixel
-                  }
-                });
-                var rgbPixel = ColorUtil.color2rgb(pixel);
-                image.data[index] = rgbPixel[0];
-                image.data[index + 1] = rgbPixel[1];
-                image.data[index + 2] = rgbPixel[2];
-                image.data[index + 3] = rgbPixel[3];
-              }
-              index += 4;
-            }
-          }
-          ctx.putImageData(image, 0, 0);
+                i = (i + 1) % pixels.length;
+                return pixel;
+              };
+            };
+
+          var moduleCount = qr.getModuleCount();
           // put to cache.
           qrData = cacheMap[qrDataKey] = {
-            url: ctx.canvas.toDataURL(), imgSize: moduleCount };
+            url: this.createQrDataURL(qr, getPixelAt), imgSize: moduleCount };
         }
         this.url = qrData.url;
         this.imgSize = qrData.imgSize;
-        return [ this.url, this.imgSize ];
-      },
-      transform: function() {
-        if (this.imgSize == 0) {
-          return '';
-        }
-        return 'translate(' + this.x + ' ' + this.y +
-          ')scale(' + this.size / this.imgSize + ')';
-      }
-    }
-  };
-
-  components['qrcode-path'] = {
-    template: '<path fill="none" stroke="none" :d="pathData" :transform="transform" />',
-    props: {
-      typeNumber: { default: 0 },
-      errorCorrectionLevel: { default: 'L', type: String },
-      negativePattern: { default: false, type: Boolean },
-      data: { default: 'hi!', type: String },
-      x: { default: 0, type: Number },
-      y: { default: 0, type: Number },
-      size: { default: 100, type: Number }
-    },
-    data: function() {
-      return { pathData: '', imgSize: 0 };
-    },
-    watch: { qrcode: function() {} },
-    computed: {
-      qrcode: function() {
-        var cacheMap = qrcode.$vueCacheMap ||
-          (qrcode.$vueCacheMap = { stat: { callCount: 0, failCount: 0 } });
-        var stat = cacheMap.stat;
-        var qrDataKey = [this.typeNumber, this.errorCorrectionLevel,
-                   this.negativePattern,
-                   '$path$', '', this.data].join('\n');
-        var qrData = cacheMap[qrDataKey];
-        stat.callCount +=1;
-        if (!qrData) {
-          stat.failCount +=1;
-          var qrKey = [this.typeNumber, this.errorCorrectionLevel,
-            '', this.data].join('\n');
-          var qr = cacheMap[qrKey];
-          stat.callCount +=1;
-          if (!qr) {
-            stat.failCount +=1;
-            // cache not found, create new
-            qr = qrcode(this.typeNumber, this.errorCorrectionLevel);
-            qr.addData(this.data);
-            qr.make();
-            cacheMap[qrKey] = qr;
-          }
-          var pathData = '';
-          var moduleCount = qr.getModuleCount();
-          for (var r = 0; r < moduleCount; r += 1) {
-            for (var c = 0; c < moduleCount; c += 1) {
-              if (qr.isDark(r, c) ^ this.negativePattern) {
-                pathData += 'M' + c + ' ' + r;
-                pathData += 'L' + (c + 1) + ' ' + r;
-                pathData += 'L' + (c + 1) + ' ' + (r + 1);
-                pathData += 'L' + c + ' ' + (r + 1);
-                pathData += 'Z ';
-              }
-            }
-          }
-          // put to cache.
-          qrData = cacheMap[qrDataKey] = {
-            pathData: pathData, imgSize: moduleCount };
-        }
-        this.pathData = qrData.pathData;
-        this.imgSize = qrData.imgSize;
-        return [ this.pathData, this.imgSize ];
+        return [ this.url, this.imgSize, this.imgLoaded ];
       },
       transform: function() {
         if (this.imgSize == 0) {

@@ -112,7 +112,7 @@
                           :size="config.qrSize"
                           :type-number="config.typeNumber"
                           :error-correction-level="config.ecl"
-                          v-if="config.pixels"
+                          v-if="config.pixels || config.clipImage" :href="config.clipImage"
                           :pixels="config.pixels" ></qrcode>
                   <qrcode v-for="qr in sticker.qrs" :data="qr.data"
                           :key="qr.data" :x="qr.x" :y="qr.y"
@@ -122,12 +122,6 @@
                           v-if="config.negativePixels"
                           :pixels="config.negativePixels"
                           :negative-pattern="true" ></qrcode>
-                  <x-image v-for="(qr, q) in sticker.qrs"
-                          :key="qr.data" :x="qr.x" :y="qr.y"
-                          :width="config.qrSize" :height="config.qrSize"
-                          :clip-path="'url(' + '#qrClipMask_' + i + '_' + s + '_' + q + ')'"
-                          v-if="config.clipImage"
-                          :href="config.clipImage" ></x-image>
                 </g>
               </svg>
             </div>
