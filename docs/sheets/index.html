@@ -83,22 +83,10 @@
                    :width="mm2pixel(config.paperWidth) + 'px'"
                    :height="mm2pixel(config.paperHeight) + 'px'"
                    :view-box.camel="'0 0 ' + config.paperWidth + ' ' + config.paperHeight" >
-                <defs v-if="config.clipImage">
-                  <template v-for="(sticker, s) in sheet.stickers">
-                    <clipPath :id="'qrClipMask_' + i + '_' + s + '_' + q"
-                              v-for="(qr, q) in sticker.qrs" >
-                      <qrcode-path :data="qr.data"
-                              :key="qr.data" :x="qr.x" :y="qr.y"
-                              :size="config.qrSize"
-                              :type-number="config.typeNumber"
-                              :error-correction-level="config.ecl" ></qrcode-path>
-                    </clipPath>
-                  </template>
-                </defs>
                 <rect v-if="config.showPaperBox" fill="none" stroke="black"
                       stroke-width="0.5"
                       :width="config.paperWidth" :height="config.paperHeight"></rect>
-                <g v-for="(sticker, s) in sheet.stickers"
+                <g v-for="sticker in sheet.stickers"
                    :transform="stickerTransform(sticker)">
                   <!-- background image -->
                   <x-svg :width="stickerWidth" :height="stickerHeight"
