@@ -556,11 +556,11 @@
               var i = 0;
               var pixels = this.pixels;
               return function(r, c, moduleCount) {
-                var pixel = pixels[j];
+                var pixel = pixels[i];
                 i = (i + 1) % pixels.length;
                 return pixel;
               };
-            };
+            }.bind(this)();
 
           var moduleCount = qr.getModuleCount();
           // put to cache.
