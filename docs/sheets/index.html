@@ -110,6 +110,14 @@
                           v-if="config.negativePixels"
                           :pixels="config.negativePixels"
                           :negative-pattern="true" ></qrcode>
+                  <qrcode-path v-for="qr in sticker.qrs" :data="qr.data"
+                          :key="qr.data" :x="qr.x" :y="qr.y"
+                          :size="config.qrSize"
+                          :type-number="config.typeNumber"
+                          :error-correction-level="config.ecl"
+                          v-if="config.negativeColor"
+                          :fill="config.negativeColor"
+                          :negative-pattern="true" ></qrcode>
                 </g>
               </svg>
             </div>

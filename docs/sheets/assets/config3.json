@@ -47,6 +47,9 @@
     "#fff",
     "#eee"
   ],
+  "negativeColor": [
+    "#cff"
+  ],
   "bgColor": "#cfc",
   "bgSelector": "[fill='#eee']",
   "guideSelector": "[stroke-dasharray]"
