@@ -399,25 +399,46 @@
 
   var imageLoader = function() {
     var cache = {};
+    var active = false;
+    var loadNext = function() {
+      if (active) {
+        window.setTimeout(loadNext, 0);
+        return;
+      }
+      if (queue.length == 0) {
+        return;
+      }
+      active = true;
+      var args = queue.shift();
+      var href = args[0];
+      var loadHandler = args[1];
+      if (cache[href]) {
+        loadHandler(cache[href]);
+        active = false;
+        loadNext();
+        return;
+      }
+      var img = document.createElement('img');
+      img.addEventListener('load', function() {
+        var ctx = document.createElement('canvas').getContext('2d');
+        ctx.canvas.width = img.width;
+        ctx.canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        cache[href] = ctx;
+        document.body.removeChild(img);
+        loadHandler(cache[href]);
+        active = false;
+        loadNext();
+      }.bind(this) );
+      img.src = href;
+      img.style.display = 'none';
+      document.body.appendChild(img);
+    };
+    var queue = [];
     return {
       load: function(href, loadHandler) {
-        if (cache[href]) {
-          loadHandler(cache[href]);
-          return;
-        }
-        var img = document.createElement('img');
-        img.style.display = 'none';
-        img.addEventListener('load', function() {
-          var ctx = document.createElement('canvas').getContext('2d');
-          ctx.canvas.width = img.width;
-          ctx.canvas.height = img.height;
-          ctx.drawImage(img, 0, 0);
-          cache[href] = ctx;
-          document.body.removeChild(img);
-          loadHandler(cache[href]);
-        }.bind(this) );
-        img.src = href;
-        document.body.appendChild(img);
+        queue.push([ href, loadHandler ]);
+        window.setTimeout(loadNext, 0);
       }
     };
   }();
