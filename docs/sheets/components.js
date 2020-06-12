@@ -515,6 +515,7 @@
             }
           }
         }
+        var gap = 0.5;
         var rects = [];
         for (var i = 0; i < list.length; i += 1) {
           var item = list[i];
@@ -524,11 +525,11 @@
           path += 'M' + c + ' ' + r;
           path += 'L' + (c + 1) + ' ' + r;
           if (c + 1 < moduleCount && map[key(r, c + 1)]) {
-            path += 'L' + (c + 1.5) + ' ' + (r + 0.5);
+            path += 'L' + (c + 1 + gap) + ' ' + (r + 0.5);
           }
           path += 'L' + (c + 1) + ' ' + (r + 1);
           if (r + 1 < moduleCount && map[key(r + 1, c)]) {
-            path += 'L' + (c + 0.5) + ' ' + (r + 1.5);
+            path += 'L' + (c + 0.5) + ' ' + (r + 1 + gap);
           }
           path += 'L' + c + ' ' + (r + 1);
           path += 'Z';
