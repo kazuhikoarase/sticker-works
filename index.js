@@ -35,7 +35,7 @@ var server = http.createServer(function(req, res) {
   if (url.match(/^.*\/$/) ) {
     url += 'index.html';
   }
-  var path = url.replace(/^([A-Za-z0-9_\-\.\$\/]+)(.*)$/, '$1');
+  var path = decodeURIComponent(url.replace(/^([^\;\?]+)(.*)$/, '$1') );
   var filePath = __dirname + config.baseDir + path;
   if (fs.existsSync(filePath) && fs.statSync(filePath).isFile() ) {
     var contentType = mimeTypes[path.replace(/^.+(\.\w+)$/, '$1')] ||
