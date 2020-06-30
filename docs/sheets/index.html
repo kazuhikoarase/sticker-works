@@ -19,6 +19,9 @@
         <input type="text" style="font-size:1.5rem;"
                v-model="config.title" placeholder="Enter title here" />
         <div style="margin:8px;">
+          <div v-for="(layer, l) in config.layers">
+            <button @click="setColorEditorVisible(l, true)"> Edit Colors #{{l + 1}}</button>
+          </div>
           <div style="margin-bottom:4px;white-space:nowrap;">
             <label @mousedown.prevent><input type="checkbox"
               v-model="config.showPaperBox" />Show Paper Box</label>
@@ -28,7 +31,6 @@
               v-model="showGuide" />Show Guide</label>
             <label @mousedown.prevent><input type="checkbox"
               v-model="config.rotate" />Rotate</label>
-            <button @click="setColorEditorVisible(true)"> Edit Colors </button>
           </div>
           <div style="margin-bottom:4px;white-space:nowrap;">
             <label>ErrorCorrectionLevel:<select v-model="config.ecl">
@@ -46,7 +48,7 @@
             <br/><slider label="Horizontal Gap" :min="0" :max="40" v-model="config.hGap"></slider>
             <br/><slider label="Vertical Gap" :min="0" :max="40" v-model="config.vGap"></slider>
             <br/><slider label="QR Size" :min="10" :max="60" v-model="config.qrSize"></slider>
-            <template v-for="(v, i) in config.qrMarginLeft" v-if="bgSVG">
+            <template v-for="(v, i) in config.qrMarginLeft">
               <br/><slider :label="'Margin Left#' + (i + 1) + '(QR)'"
                            :min="0" :max="40" v-model="config.qrMarginLeft[i].coarse"></slider>
               <br/><slider label=" Fine"
@@ -86,30 +88,36 @@
                 <rect v-if="config.showPaperBox" fill="none" stroke="black"
                       stroke-width="0.5"
                       :width="config.paperWidth" :height="config.paperHeight"></rect>
-                <g v-for="sticker in sheet.stickers"
-                   :transform="stickerTransform(sticker)">
-                  <!-- background image -->
-                  <x-svg :width="stickerWidth" :height="stickerHeight"
-                         :svg="bgSVG" @load="svg_loadHandler"></x-svg>
-                  <!-- background rect -->
-                  <rect v-if="config.showBgBox" :width="stickerWidth" :height="stickerHeight"
-                        fill="none" stroke="black" stroke-width="0.5"></rect>
-                  <!-- qrcode -->
-                  <qrcode v-for="qr in sticker.qrs" :data="qr.data"
-                          :key="qr.data" :x="qr.x" :y="qr.y"
-                          :size="config.qrSize"
-                          :type-number="config.typeNumber"
-                          :error-correction-level="config.ecl"
-                          v-if="config.pixels || config.clipImage" :href="config.clipImage"
-                          :pixels="config.pixels" ></qrcode>
-                  <qrcode v-for="qr in sticker.qrs" :data="qr.data"
-                          :key="qr.data" :x="qr.x" :y="qr.y"
-                          :size="config.qrSize"
-                          :type-number="config.typeNumber"
-                          :error-correction-level="config.ecl"
-                          v-if="config.negativePixels"
-                          :pixels="config.negativePixels"
-                          :negative-pattern="true" ></qrcode>
+                <g v-for="(layer, l) in config.layers" ref="layer">
+                  <g v-for="sticker in sheet.stickers"
+                     :transform="stickerTransform(sticker)">
+                    <!-- background image -->
+                    <x-svg :width="stickerWidth" :height="stickerHeight"
+                           :svg="layerStates[l].bgSVG"
+                           @load="svg_loadHandler($event, layer.bgSelector)"></x-svg>
+                    <!-- background rect -->
+                    <rect v-if="config.showBgBox"
+                          :width="stickerWidth" :height="stickerHeight"
+                          fill="none"
+                          stroke="black" stroke-width="0.5"></rect>
+                    <!-- qrcode -->
+                    <qrcode v-for="qr in sticker.qrs" :data="qr.data"
+                            :key="qr.data" :x="qr.x" :y="qr.y"
+                            :size="config.qrSize"
+                            :type-number="config.typeNumber"
+                            :error-correction-level="config.ecl"
+                            v-if="layer.pixels || layer.clipImage"
+                            :href="layer.clipImage"
+                            :pixels="layer.pixels" ></qrcode>
+                    <qrcode v-for="qr in sticker.qrs" :data="qr.data"
+                            :key="qr.data" :x="qr.x" :y="qr.y"
+                            :size="config.qrSize"
+                            :type-number="config.typeNumber"
+                            :error-correction-level="config.ecl"
+                            v-if="layer.negativePixels"
+                            :pixels="layer.negativePixels"
+                            :negative-pattern="true" ></qrcode>
+                  </g>
                 </g>
               </svg>
             </div>
@@ -117,11 +125,13 @@
         </div>
       </div>
       <modal-dialog ref="colorEditor" v-if="colorEditorVisible"
-          @close="setColorEditorVisible(false)">
+          @close="setColorEditorVisible(colorEditorLayerIndex, false)">
         <qrcode-color-editor v-model="colorEditor"></qrcode-color-editor>
         <div style="text-align:center;margin-top:4px;">
-          <button @click="setColorEditorVisible(false, true)"> Apply </button>
-          <button @click="setColorEditorVisible(false)"> Cancel </button>
+          <button @click="setColorEditorVisible(colorEditorLayerIndex,
+            false, true)"> Apply </button>
+          <button @click="setColorEditorVisible(colorEditorLayerIndex,
+            false)"> Cancel </button>
         </div>
       </modal-dialog>
     </div>

@@ -9,9 +9,10 @@ new Vue({
     stickerHeight: 0,
     lastState: {},
     grabbing: false,
-    bgSVG: '',
+    layerStates: [],
     bgUpdate: 0,
     showGuide: true,
+    colorEditorLayerIndex: -1,
     colorEditorVisible: false,
     colorEditor: {},
     zoomSet: [
@@ -56,6 +57,18 @@ new Vue({
       }
       this.loadResource(newVal, function(data) {
         var config = JSON.parse(data);
+        if (!config.layers) {
+          var layer = {};
+          [ 'bgUrl', 'pixels', 'negativePixels', 'clipImage',
+              'bgColor', 'bgSelector', 'guideSelector' ].forEach(function(prop) {
+            layer[prop] = config[prop];
+            delete config[prop];
+          });
+          config.layers = [ layer ];
+        }
+        this.layerStates = config.layers.map(function() {
+          return { bgSVG: '' };
+        });
         this.config = config;
         this.stickerWidth = config.stickerWidth;
         this.stickerHeight = config.stickerHeight;
@@ -66,8 +79,10 @@ new Vue({
           });
         }.bind(this) );
         // load background image.
-        this.loadResource(config.bgUrl, function(data) {
-          this.bgSVG = data;
+        config.layers.forEach(function(layer, l) {
+          this.loadResource(layer.bgUrl, function(data) {
+            this.layerStates[l].bgSVG = data;
+          }.bind(this) );
         }.bind(this) );
       }.bind(this) );
     },
@@ -143,22 +158,29 @@ new Vue({
     },
     svgBgStyle: function() {
       var config = this.config;
-      if (this.$el) {
-        var i, elms;
-        elms = this.$el.querySelectorAll('[x-bg-elm]');
-        for (i = 0; i < elms.length; i += 1) {
-          elms[i].setAttribute('fill', config.bgColor);
-          elms[i].style.fill = config.bgColor;
-        }
-        if (config.guideSelector) {
-          elms = this.$el.querySelectorAll(config.guideSelector);
+      var bgStates = [];
+      if (this.$refs.layer &&
+          config.layers.length == this.$refs.layer.length) {
+        this.$refs.layer.forEach(function($layer, l) {
+          var i, elms;
+          elms = $layer.querySelectorAll('[x-bg-elm]');
           for (i = 0; i < elms.length; i += 1) {
-            elms[i].style.display = this.showGuide? '' : 'none';
+            elms[i].setAttribute('fill', config.layers[l].bgColor);
+            elms[i].style.fill = config.layers[l].bgColor;
           }
-        }
+          if (config.layers[l].guideSelector) {
+            elms = $layer.querySelectorAll(config.layers[l].guideSelector);
+            for (i = 0; i < elms.length; i += 1) {
+              elms[i].style.display = this.showGuide? '' : 'none';
+            }
+          }
+          bgStates.push({
+            bgSelector: config.layers[l].bgSelector,
+            bgColor: config.layers[l].bgColor,
+            guideSelector: config.layers[l].guideSelector });
+        }.bind(this) );
       }
-      return [ config.bgSelector, config.bgColor, this.bgUpdate,
-               config.guideSelector, this.showGuide ];
+      return [ bgStates, this.bgUpdate, this.showGuide ];
     },
     frameStyle: function() {
       var config = this.config;
@@ -232,11 +254,10 @@ new Vue({
       config.frameWidth = Math.max(0, this.lastState.frameWidth + dx);
       config.frameHeight = Math.max(0, this.lastState.frameHeight + dy);
     },
-    svg_loadHandler: function(event) {
-      var config = this.config;
+    svg_loadHandler: function(event, bgSelector) {
       var svg = event.svg;
-      if (config.bgSelector) {
-        var bgElms = svg.querySelectorAll(config.bgSelector);
+      if (bgSelector) {
+        var bgElms = svg.querySelectorAll(bgSelector);
         for (var i = 0; i < bgElms.length; i += 1) {
           bgElms[i].setAttribute('x-bg-elm', 'x-bg-elm');
         }
@@ -288,14 +309,15 @@ new Vue({
           saveAs(content, filename);
         });
     },
-    setColorEditorVisible: function(colorEditorVisible, apply) {
+    setColorEditorVisible: function(index, colorEditorVisible, apply) {
       if (colorEditorVisible) {
-        this.colorEditor.pixels = this.config.pixels;
-        this.colorEditor.bgColor = this.config.bgColor;
+        this.colorEditorLayerIndex = index;
+        this.colorEditor.pixels = this.config.layers[index].pixels;
+        this.colorEditor.bgColor = this.config.layers[index].bgColor;
       } else {
         if (apply) {
-          this.config.pixels = this.colorEditor.pixels;
-          this.config.bgColor = this.colorEditor.bgColor;
+          this.config.layers[index].pixels = this.colorEditor.pixels;
+          this.config.layers[index].bgColor = this.colorEditor.bgColor;
         }
       }
       this.colorEditorVisible = colorEditorVisible;
