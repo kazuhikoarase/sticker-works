@@ -67,7 +67,7 @@ new Vue({
           config.layers = [ layer ];
         }
         this.layerStates = config.layers.map(function() {
-          return { bgSVG: '' };
+          return { visible: true, bgSVG: '' };
         });
         this.config = config;
         this.stickerWidth = config.stickerWidth;

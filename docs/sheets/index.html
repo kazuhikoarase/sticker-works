@@ -20,7 +20,9 @@
                v-model="config.title" placeholder="Enter title here" />
         <div style="margin:8px;">
           <div v-for="(layer, l) in config.layers">
-            <button @click="setColorEditorVisible(l, true)"> Edit Colors #{{l + 1}}</button>
+            <input type="checkbox" v-model="layerStates[l].visible" />
+            <button @click="setColorEditorVisible(l, true)"
+            > Edit Colors #{{l + 1}} </button>
           </div>
           <div style="margin-bottom:4px;white-space:nowrap;">
             <label @mousedown.prevent><input type="checkbox"
@@ -88,7 +90,8 @@
                 <rect v-if="config.showPaperBox" fill="none" stroke="black"
                       stroke-width="0.5"
                       :width="config.paperWidth" :height="config.paperHeight"></rect>
-                <g v-for="(layer, l) in config.layers" ref="layer">
+                <g v-for="(layer, l) in config.layers" ref="layer"
+                    :display="layerStates[l].visible? 'inline' : 'none'" >
                   <g v-for="sticker in sheet.stickers"
                      :transform="stickerTransform(sticker)">
                     <!-- background image -->

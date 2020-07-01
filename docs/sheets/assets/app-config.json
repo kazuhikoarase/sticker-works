@@ -7,6 +7,8 @@
     { "title": "my config3(with negative pixels)",
       "url": "assets/config3.json" },
     { "title": "my config4(clip test)",
-      "url": "assets/config4.json", "selected": true }
+      "url": "assets/config4.json" },
+    { "title": "my config5(multi layers)",
+      "url": "assets/config5.json", "selected": true }
   ]
 }
