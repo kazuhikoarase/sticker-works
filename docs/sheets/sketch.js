@@ -158,28 +158,27 @@ new Vue({
     },
     svgBgStyle: function() {
       var config = this.config;
-      var bgStates = [];
-      (config.layers || []).forEach(function(layer, l) {
+      var bgStates = (config.layers || []).map(function(layer, l) {
         var layerSelector = '.layer-' + l;
         var i, elms;
         elms = this.$el.querySelectorAll(layerSelector + ' [x-bg-elm]');
         for (i = 0; i < elms.length; i += 1) {
-          elms[i].setAttribute('fill', config.layers[l].bgColor);
-          elms[i].style.fill = config.layers[l].bgColor;
+          elms[i].setAttribute('fill', layer.bgColor);
+          elms[i].style.fill = layer.bgColor;
         }
-        if (config.layers[l].guideSelector) {
+        if (layer.guideSelector) {
           elms = this.$el.querySelectorAll(layerSelector + ' ' +
-              config.layers[l].guideSelector);
+              layer.guideSelector);
           for (i = 0; i < elms.length; i += 1) {
             elms[i].style.display = this.showGuide? '' : 'none';
           }
         }
-        bgStates.push({
-          bgSelector: config.layers[l].bgSelector,
-          bgColor: config.layers[l].bgColor,
-          guideSelector: config.layers[l].guideSelector });
+        return {
+          bgSelector: layer.bgSelector,
+          bgColor: layer.bgColor,
+          guideSelector: layer.guideSelector
+        };
       }.bind(this) );
-
       return [ bgStates, this.bgUpdate, this.showGuide ];
     },
     frameStyle: function() {
