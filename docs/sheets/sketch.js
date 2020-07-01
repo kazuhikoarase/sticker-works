@@ -159,27 +159,27 @@ new Vue({
     svgBgStyle: function() {
       var config = this.config;
       var bgStates = [];
-      if (this.$refs.layer &&
-          config.layers.length == this.$refs.layer.length) {
-        this.$refs.layer.forEach(function($layer, l) {
-          var i, elms;
-          elms = $layer.querySelectorAll('[x-bg-elm]');
+      (config.layers || []).forEach(function(layer, l) {
+        var layerSelector = '.layer-' + l;
+        var i, elms;
+        elms = this.$el.querySelectorAll(layerSelector + ' [x-bg-elm]');
+        for (i = 0; i < elms.length; i += 1) {
+          elms[i].setAttribute('fill', config.layers[l].bgColor);
+          elms[i].style.fill = config.layers[l].bgColor;
+        }
+        if (config.layers[l].guideSelector) {
+          elms = this.$el.querySelectorAll(layerSelector + ' ' +
+              config.layers[l].guideSelector);
           for (i = 0; i < elms.length; i += 1) {
-            elms[i].setAttribute('fill', config.layers[l].bgColor);
-            elms[i].style.fill = config.layers[l].bgColor;
+            elms[i].style.display = this.showGuide? '' : 'none';
           }
-          if (config.layers[l].guideSelector) {
-            elms = $layer.querySelectorAll(config.layers[l].guideSelector);
-            for (i = 0; i < elms.length; i += 1) {
-              elms[i].style.display = this.showGuide? '' : 'none';
-            }
-          }
-          bgStates.push({
-            bgSelector: config.layers[l].bgSelector,
-            bgColor: config.layers[l].bgColor,
-            guideSelector: config.layers[l].guideSelector });
-        }.bind(this) );
-      }
+        }
+        bgStates.push({
+          bgSelector: config.layers[l].bgSelector,
+          bgColor: config.layers[l].bgColor,
+          guideSelector: config.layers[l].guideSelector });
+      }.bind(this) );
+
       return [ bgStates, this.bgUpdate, this.showGuide ];
     },
     frameStyle: function() {

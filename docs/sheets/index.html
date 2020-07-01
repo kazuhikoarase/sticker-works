@@ -90,7 +90,7 @@
                 <rect v-if="config.showPaperBox" fill="none" stroke="black"
                       stroke-width="0.5"
                       :width="config.paperWidth" :height="config.paperHeight"></rect>
-                <g v-for="(layer, l) in config.layers" ref="layer"
+                <g v-for="(layer, l) in config.layers" :class="'layer-' + l"
                     :display="layerStates[l].visible? 'inline' : 'none'" >
                   <g v-for="sticker in sheet.stickers"
                      :transform="stickerTransform(sticker)">
