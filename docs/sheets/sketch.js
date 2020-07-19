@@ -205,8 +205,8 @@ new Vue({
     stickerTransform: function(sticker) {
       var transform = 'translate(' + sticker.x + ' ' + sticker.y +')';
       if (this.config.rotate) {
-        transform += 'translate(0 ' + this.stickerWidth + ')'
-        transform += 'rotate(-90)'
+        transform += 'translate(' + this.stickerHeight + '0)'
+        transform += 'rotate(90)'
       }
       return transform;
     },
