@@ -84,8 +84,8 @@
           <div :style="frameStyle" @mousedown="frame_mousedownHandler">
             <div ref="svgHolder" :style="svgHolderStyle">
               <svg ref="svg" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
-                   :width="mm2pixel(config.paperWidth) + 'px'"
-                   :height="mm2pixel(config.paperHeight) + 'px'"
+                   :width="stickerUtil.mm2pixel(config.paperWidth) + 'px'"
+                   :height="stickerUtil.mm2pixel(config.paperHeight) + 'px'"
                    :view-box.camel="'0 0 ' + config.paperWidth + ' ' + config.paperHeight" >
                 <rect v-if="config.showPaperBox" fill="none" stroke="black"
                       stroke-width="0.5"

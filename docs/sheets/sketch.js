@@ -1,3 +1,7 @@
+// main sketch
+
+'use strict';
+
 new Vue({
   el: '#app',
   data: {
@@ -30,8 +34,7 @@ new Vue({
       { value: 'M', label: 'M(15%)' },
       { value: 'Q', label: 'Q(25%)' },
       { value: 'H', label: 'H(30%)' }
-    ],
-    dpi: 72 // fixed to 72dpi
+    ]
   },
   mounted: function() {
     this.loadResource('assets/app-config.json', function(data) {
@@ -55,68 +58,21 @@ new Vue({
       if (!newVal) {
         return;
       }
-      this.loadResource(newVal, function(data) {
-        var config = JSON.parse(data);
-        if (!config.layers) {
-          var layer = {};
-          [ 'bgUrl', 'pixels', 'negativePixels', 'clipImage',
-              'bgColor', 'bgSelector', 'guideSelector' ].forEach(function(prop) {
-            layer[prop] = config[prop];
-            delete config[prop];
-          });
-          config.layers = [ layer ];
-        }
-        this.layerStates = config.layers.map(function() {
-          return { visible: true, bgSVG: '' };
-        });
-        this.config = config;
-        this.stickerWidth = config.stickerWidth;
-        this.stickerHeight = config.stickerHeight;
-        // load data for qrcode.
-        this.loadResource(config.dataUrl, function(data) {
-          this.strings = data.split(/\s+/g).filter(function(line) {
-            return line.length > 0; // reject blank line.
-          });
-        }.bind(this) );
-        // load background image.
-        config.layers.forEach(function(layer, l) {
-          this.loadResource(layer.bgUrl, function(data) {
-            this.layerStates[l].bgSVG = data;
-          }.bind(this) );
-        }.bind(this) );
-      }.bind(this) );
+      stickerUtil.loadConfig(this, this.loadResource, newVal);
     },
     svgBgStyle: function() {}
   },
   computed: {
     sheets : function() {
-      return stickerUtil.getSheets(this.config, this.stickerWidth, this.stickerHeight,
+      return stickerUtil.getSheets(
+          this.config,
+          this.stickerWidth,
+          this.stickerHeight,
           this.strings.slice() // copy of strings.
       );
     },
     svgBgStyle: function() {
-      var config = this.config;
-      var bgStates = (config.layers || []).map(function(layer, l) {
-        var layerSelector = '.layer-' + l;
-        var i, elms;
-        elms = this.$el.querySelectorAll(layerSelector + ' [x-bg-elm]');
-        for (i = 0; i < elms.length; i += 1) {
-          elms[i].setAttribute('fill', layer.bgColor);
-          elms[i].style.fill = layer.bgColor;
-        }
-        if (layer.guideSelector) {
-          elms = this.$el.querySelectorAll(layerSelector + ' ' +
-              layer.guideSelector);
-          for (i = 0; i < elms.length; i += 1) {
-            elms[i].style.display = this.showGuide? '' : 'none';
-          }
-        }
-        return {
-          bgSelector: layer.bgSelector,
-          bgColor: layer.bgColor,
-          guideSelector: layer.guideSelector
-        };
-      }.bind(this) );
+      var bgStates = stickerUtil.getBgStates(this.config, this.showGuide, this.$el);
       return [ bgStates, this.bgUpdate, this.showGuide ];
     },
     frameStyle: function() {
@@ -134,12 +90,6 @@ new Vue({
     }
   },
   methods: {
-    mm2pixel: function(v) {
-      return v * this.dpi / 25.4; 
-    },
-    pixel2mm: function(v) {
-      return v * 25.4 / this.dpi; 
-    },
     stickerTransform: function(sticker) {
       var transform = 'translate(' + sticker.x + ' ' + sticker.y +')';
       if (this.config.rotate) {
@@ -192,25 +142,8 @@ new Vue({
       config.frameHeight = Math.max(0, this.lastState.frameHeight + dy);
     },
     svg_loadHandler: function(event, bgSelector) {
-      var svg = event.svg;
-      if (bgSelector) {
-        var bgElms = svg.querySelectorAll(bgSelector);
-        for (var i = 0; i < bgElms.length; i += 1) {
-          bgElms[i].setAttribute('x-bg-elm', 'x-bg-elm');
-        }
+      if (stickerUtil.postLoadSVG(this, this.config, event.svg, bgSelector) ) {
         this.bgUpdate = +new Date();
-      }
-      var viewBox = (svg.getAttribute('viewBox') || '').split(/\s/g);
-      if (viewBox.length == 4) {
-        var config = this.config;
-        [ 'stickerWidth', 'stickerHeight' ].forEach(function(p, i) {
-          if (config[p] == 0) {
-            var v = +this.pixel2mm(viewBox[2 + i]);
-            if (this[p] != v) {
-              this[p] = v;
-            }
-          }
-        }.bind(this) );
       }
     },
     download_clickHandler: function(index, id) {
