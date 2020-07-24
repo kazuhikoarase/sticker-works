@@ -159,6 +159,57 @@ var stickerUtil = function() {
           guideSelector: layer.guideSelector
         };
       });
+    },
+    getQrDataRects: function(qr, getPixelAt, negativePattern) {
+      var moduleCount = qr.getModuleCount();
+      // There are three position probe patterns
+      // at fixed position and size.
+      var posProbes = [
+        { x: 2, y: 2, pixel: null },
+        { x: moduleCount - 5, y: 2, pixel: null },
+        { x: 2, y: moduleCount - 5, pixel: null }
+      ];
+      var list = [];
+      var map = {};
+      var key = function(r, c) { return r + ':' + c; };
+      for (var r = 0; r < moduleCount; r += 1) {
+        for (var c = 0; c < moduleCount; c += 1) {
+          if (qr.isDark(r, c) ^ negativePattern) {
+            var pixel = getPixelAt(r, c, moduleCount);
+            posProbes.forEach(function(pp) {
+              if (pp.x == c && pp.y == r) {
+                pp.pixel = pixel; // store left-top pixel
+              } else if (pp.x <= c && c < pp.x + 3 &&
+                pp.y <= r && r < pp.y + 3) {
+                pixel = pp.pixel; // use stored pixel
+              }
+            });
+            list.push({ r: r, c: c, pixel: pixel })
+            map[key(r, c)] = true;
+          }
+        }
+      }
+      var gap = 0.5;
+      var rects = [];
+      for (var i = 0; i < list.length; i += 1) {
+        var item = list[i];
+        var r = item.r;
+        var c = item.c;
+        var path = '';
+        path += 'M' + c + ' ' + r;
+        path += 'L' + (c + 1) + ' ' + r;
+        if (c + 1 < moduleCount && map[key(r, c + 1)]) {
+          path += 'L' + (c + 1 + gap) + ' ' + (r + 0.5);
+        }
+        path += 'L' + (c + 1) + ' ' + (r + 1);
+        if (r + 1 < moduleCount && map[key(r + 1, c)]) {
+          path += 'L' + (c + 0.5) + ' ' + (r + 1 + gap);
+        }
+        path += 'L' + c + ' ' + (r + 1);
+        path += 'Z';
+        rects.push({ path: path, color: item.pixel});
+      }
+      return rects;
     }
   };
 }();
