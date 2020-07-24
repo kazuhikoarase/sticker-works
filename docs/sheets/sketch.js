@@ -91,12 +91,7 @@ new Vue({
   },
   methods: {
     stickerTransform: function(sticker) {
-      var transform = 'translate(' + sticker.x + ' ' + sticker.y +')';
-      if (this.config.rotate) {
-        transform += 'translate(' + this.stickerHeight + '0)'
-        transform += 'rotate(90)'
-      }
-      return transform;
+      return stickerUtil.getStickerTransform(this, sticker);
     },
     frame_mousedownHandler: function(event) {
       // frame grab feature.

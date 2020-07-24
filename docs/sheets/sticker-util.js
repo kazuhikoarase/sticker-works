@@ -3,7 +3,6 @@
 'use strict';
 
 var stickerUtil = function() {
-  console.log('stickerUtil #1x');
 
   var dpi = 72 // fixed to 72dpi
 
@@ -45,6 +44,14 @@ var stickerUtil = function() {
           });
         });
       });
+    },
+    getStickerTransform: function(target, sticker) {
+      var transform = 'translate(' + sticker.x + ' ' + sticker.y +')';
+      if (target.config.rotate) {
+        transform += 'translate(' + target.stickerHeight + '0)'
+        transform += 'rotate(90)'
+      }
+      return transform;
     },
     postLoadSVG : function(target, config, svg, bgSelector) {
       var bgUpdated = false;
@@ -155,3 +162,7 @@ var stickerUtil = function() {
     }
   };
 }();
+
+if (typeof exports === 'object') {
+  module.exports = stickerUtil;
+}
