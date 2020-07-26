@@ -11,36 +11,37 @@ var { JSDOM } = jsdom;
 !function() {
 
   var baseUrl = 'docs/sheets/';
+
+  var tmpImgSuffix = '_tmpImage';
+
+  var ColorUtil = stickerUtil.ColorUtil;
+
   var render = function(sheet) {
 
-    var renderQrcode = function(qr, pixels, href) {
+    var renderQrcode = function(qr, pixels, image) {
+
       var list = [];
       var map = {};
       var key = function(r, c) { return r + ':' + c; };
       var qr_ = qrcode(config.typeNumber, config.ecl);
       qr_.addData(qr.data);
       qr_.make();
-      /*
-      var moduleCount = qr_.getModuleCount();
-      layers += `<g transform="${'translate(' + qr.x + ' ' + qr.y +
-        ')scale(' + config.qrSize / moduleCount + ')'}" stroke="none">`;
-      var gap = 0.5;
-*/
-      var getPixelAt = href?
+
+      var getPixelAt = image?
         function() {
           // grab from image.
-        throw 'not implemented';/*
-          var ctx = target.imgCtx;
-          var width = +ctx.canvas.width;
-          var height = +ctx.canvas.height;
-          var data = ctx.getImageData(0, 0, width, height).data;
+          var width = image.bitmap.width;
+          var height = image.bitmap.height;
           return function(r, c, moduleCount) {
-            var h = Math.floor(height * r / moduleCount);
-            var w = Math.floor(width * c / moduleCount);
-            var i = (w + h * width) * 4;
-            return ColorUtil.rgb2hex(data[i], data[i + 1], data[i + 2]);
+            var y = Math.floor(height * r / moduleCount);
+            var x = Math.floor(width * c / moduleCount);
+            var rgba = image.getPixelColor(x, y);
+            return ColorUtil.rgb2hex(
+                (rgba >>> 24) & 0xff,
+                (rgba >>> 16) & 0xff,
+                (rgba >>> 8) & 0xff);
           };
-          */
+
         }() :
         function() {
           // sequence of pixels.
@@ -52,29 +53,23 @@ var { JSDOM } = jsdom;
           };
         }();
 
-      var rects = stickerUtil.getQrDataRects(qr_,getPixelAt, false);
-  /*    
-      for (var r = 0; r < moduleCount; r += 1) {
-        for (var c = 0; c < moduleCount; c += 1) {
-          if (qr_.isDark(r, c) ) {
-            layers += `<path d="M${c} ${r
-              }L${c + 1} ${r
-              }L${c + 1 + gap} ${r + 0.5
-              }L${c + 1} ${r + 1
-              }L${c + 0.5} ${r + 1 + gap
-              }L${c} ${r + 1
-              }Z" fill=""></path>`;
-          }
-        }
-      }
-      */
+      var size = config.qrSize;
+      var imgSize = qr_.getModuleCount();
+      layers += `<g transform="${'translate(' + qr.x + ' ' + qr.y +
+          ')scale(' + size / imgSize + ')'}">`;
+      var rects = stickerUtil.getQrDataRects(qr_, getPixelAt, false);
+      rects.forEach(function(rect) {
+        layers += `<path d="${rect.path}" fill="${rect.color}"></path>`;
+      });
       layers += `</g>`;
     };
-    
+
     var layers = '';
     config.layers.forEach(function(layer, l) {
+
       layers += `<g class="${'layer-' + l}"
         display="${target.layerStates[l].visible? 'inline' : 'none'}" >`;
+
       var bgRect = config.showBgBox? `<rect
               width="${target.stickerWidth}" height="${target.stickerHeight}"
               fill="none"
@@ -86,7 +81,7 @@ var { JSDOM } = jsdom;
 
         if (layer.pixels || layer.clipImage) {
           sticker.qrs.forEach(function(qr) {
-            renderQrcode(qr, layer.pixels, layer.clipImage);
+            renderQrcode(qr, layer.pixels, layer['clipImage' + tmpImgSuffix]);
           });
         }
 
@@ -96,30 +91,9 @@ var { JSDOM } = jsdom;
           });
         }
 
-        
-       /*
-       `
-         <!-- qrcode -->
-         <qrcode v-for="qr in sticker.qrs" :data="qr.data"
-                 :key="qr.data" :x="qr.x" :y="qr.y"
-                 :size="config.qrSize"
-                 :type-number="config.typeNumber"
-                 :error-correction-level="config.ecl"
-                 v-if="layer.pixels || layer.clipImage"
-                 :href="layer.clipImage"
-                 :pixels="layer.pixels" ></qrcode>
-         <qrcode v-for="qr in sticker.qrs" :data="qr.data"
-                 :key="qr.data" :x="qr.x" :y="qr.y"
-                 :size="config.qrSize"
-                 :type-number="config.typeNumber"
-                 :error-correction-level="config.ecl"
-                 v-if="layer.negativePixels"
-                 :pixels="layer.negativePixels"
-                 :negative-pattern="true" ></qrcode>
-       </g>`;
-     */
         layers += `</g>`;
       });
+
       layers += `</g>`;
 
     });
@@ -180,7 +154,7 @@ var { JSDOM } = jsdom;
   });
   var imgCount = imgPaths.length;
   
-  var loagImages = function() {
+  var loadImages = function() {
     if (!imgPaths.length) {
       console.log('load complete/' + imgCount);
       render(sheets[0]);
@@ -189,19 +163,13 @@ var { JSDOM } = jsdom;
     var imgPath = imgPaths.shift();
     var target = imgPath.target;
     var url = baseUrl + target[imgPath.prop];
-    console.log('saa', url);
     jimp.read(url, function(err, image) {
-      target[imgPath.prop + '_tmpImage'] = image;
-      var w = image.bitmap.width;
-      var h = image.bitmap.height;
-      console.log(w + 'x' + h);
-      console.log(image.getPixelColor(0,0));
-      console.log(jimp.intToRGBA(image.getPixelColor(0,0) ) );
-      console.log(jimp.intToRGBA(image.getPixelColor(w - 1, h - 1) ) );
-      loagImages();
+      target[imgPath.prop + tmpImgSuffix] = image;
+      // load next
+      loadImages();
     });
   };
-  loagImages();
+  loadImages();
 
 
 
