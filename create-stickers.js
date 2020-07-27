@@ -105,22 +105,22 @@ var stickerUtil = require('./docs/sheets/sticker-util.js');
       });
 
       layers += `</g>`;
-
     });
 
     var paperBox = config.showPaperBox?
       `<rect fill="none" stroke="black" stroke-width="0.5"
-       width="${config.paperWidth}" height="${config.paperHeight}"></rect>` : ``;
+         width="${config.paperWidth}"
+         height="${config.paperHeight}"></rect>` : ``;
 
-    var paper = `<svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
-      width="${stickerUtil.mm2pixel(config.paperWidth) + 'px'}"
-      height="${stickerUtil.mm2pixel(config.paperHeight) + 'px'}"
-      viewBox="${'0 0 ' + config.paperWidth + ' ' + config.paperHeight}" >
-    ${paperBox}
-    ${layers}
-    </svg>`;
+    var svg = new JSDOM(
+      `<svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
+        width="${stickerUtil.mm2pixel(config.paperWidth) + 'px'}"
+        height="${stickerUtil.mm2pixel(config.paperHeight) + 'px'}"
+        viewBox="${'0 0 ' + config.paperWidth + ' ' + config.paperHeight}" >
+        ${paperBox}
+        ${layers}
+      </svg>`, { contentType: 'application/xml' });
 
-    var svg = new JSDOM(paper, { contentType: 'application/xml' });
     try {
       stickerUtil.getBgStates(config, target.showGuide, svg.window.document);
       var filename = config.title + '-'  + sheet.id + '.svg';
@@ -156,13 +156,14 @@ var stickerUtil = require('./docs/sheets/sticker-util.js');
     }
   });
 
-  
   // load test
-  var strings = [];
-  for (var i = 0; i < 3000; i += 1) {
-    strings.push('my url#' + i);
-  }
-  target.strings = strings;
+  !function() {
+    var strings = [];
+    for (var i = 0; i < 3000; i += 1) {
+      strings.push('my url#' + i);
+    }
+    target.strings = strings;
+  }();
 
   var sheets = stickerUtil.getSheets(
       target.config,
