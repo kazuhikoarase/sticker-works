@@ -1,3 +1,5 @@
+// for standalone sticker creation.
+
 'use strict';
 
 var fs = require('fs');
@@ -8,16 +10,23 @@ var stickerUtil = require('./docs/sheets/sticker-util.js');
 
 !function() {
 
-  var configPath = 'assets/config4.json';
+  if (process.argv.length != 3) {
+    console.log('config path not specified.');
+    console.log('example:');
+    console.log('  node create-stickers assets/config.json');
+    return;
+  }
 
-  var baseUrl = 'docs/sheets/';
+  var configPath = process.argv[2];
+
+  var baseDir = 'docs/sheets/';
 
   var tmpImgSuffix = '_tmpImage';
 
   var { JSDOM } = jsdom;
   var ColorUtil = stickerUtil.ColorUtil;
 
-  var render = function(sheet) {
+  var render = function(sheet, i) {
 
     var renderQrcode = function(qr, pixels, image) {
 
@@ -100,8 +109,8 @@ var stickerUtil = require('./docs/sheets/sticker-util.js');
     });
 
     var paperBox = config.showPaperBox?
-        `<rect fill="none" stroke="black" stroke-width="0.5"
-         width="${config.paperWidth}" height="${config.paperHeight}"></rect>` : ``;
+      `<rect fill="none" stroke="black" stroke-width="0.5"
+       width="${config.paperWidth}" height="${config.paperHeight}"></rect>` : ``;
 
     var paper = `<svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
       width="${stickerUtil.mm2pixel(config.paperWidth) + 'px'}"
@@ -113,19 +122,20 @@ var stickerUtil = require('./docs/sheets/sticker-util.js');
 
     var svg = new JSDOM(paper, { contentType: 'application/xml' });
     stickerUtil.getBgStates(config, target.showGuide, svg.window.document);
-    var svgText = svg.serialize();
 
-    fs.writeFileSync('output/test.svg.xml', svgText);
-    fs.writeFileSync('output/test.svg', svgText);
+    var filename = config.title + '-'  + sheet.id + '.svg';
+    console.log('output ' + filename);
+    fs.writeFileSync('output/' + filename, svg.serialize() );
   };
 
   var loadResource = function(path, loadHandler) {
-    loadHandler(fs.readFileSync(baseUrl + path, 'UTF-8') );
+    loadHandler(fs.readFileSync(baseDir + path, 'UTF-8') );
   };
 
   var target = { showGuide: true };
   stickerUtil.loadConfig(target, loadResource, configPath);
   var config = target.config;
+  config.title = config.title.replace(/^\s+|\s+$/g, '') || 'stickers';
 
   config.layers.forEach(function(layer, l) {
     var bgSvg = new JSDOM(target.layerStates[l].bgSVG,
@@ -155,12 +165,15 @@ var stickerUtil = require('./docs/sheets/sticker-util.js');
 
   var loadImages = function() {
     if (!imgPaths.length) {
-      render(sheets[0]);
+      // end loading and start rendering.
+      sheets.forEach(function(sheet, i) {
+        render(sheet, i);
+      });
       return;
     }
     var imgPath = imgPaths.shift();
     var target = imgPath.target;
-    var url = baseUrl + target[imgPath.prop];
+    var url = baseDir + target[imgPath.prop];
     jimp.read(url, function(err, image) {
       target[imgPath.prop + tmpImgSuffix] = image;
       // load next
