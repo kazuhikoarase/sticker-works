@@ -6,8 +6,6 @@ var jimp = require('jimp');
 var qrcode = require('qrcode-generator');
 var stickerUtil = require('./docs/sheets/sticker-util.js');
 
-var { JSDOM } = jsdom;
-
 !function() {
 
   var configPath = 'assets/config4.json';
@@ -16,6 +14,7 @@ var { JSDOM } = jsdom;
 
   var tmpImgSuffix = '_tmpImage';
 
+  var { JSDOM } = jsdom;
   var ColorUtil = stickerUtil.ColorUtil;
 
   var render = function(sheet) {
@@ -114,10 +113,10 @@ var { JSDOM } = jsdom;
 
     var svg = new JSDOM(paper, { contentType: 'application/xml' });
     stickerUtil.getBgStates(config, target.showGuide, svg.window.document);
-    paper = svg.serialize();
+    var svgText = svg.serialize();
 
-    fs.writeFileSync('output/test.svg.xml', paper);
-    fs.writeFileSync('output/test.svg', paper);
+    fs.writeFileSync('output/test.svg.xml', svgText);
+    fs.writeFileSync('output/test.svg', svgText);
   };
 
   var loadResource = function(path, loadHandler) {
@@ -171,4 +170,3 @@ var { JSDOM } = jsdom;
   loadImages();
 
 }();
-
