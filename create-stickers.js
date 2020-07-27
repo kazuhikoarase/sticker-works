@@ -1,4 +1,6 @@
+//
 // for standalone sticker creation.
+//
 
 'use strict';
 
@@ -6,7 +8,7 @@ var fs = require('fs');
 var jsdom = require("jsdom");
 var jimp = require('jimp');
 var qrcode = require('qrcode-generator');
-var stickerUtil = require('./docs/sheets/sticker-util.js');
+var stickerUtil = require(__dirname + '/docs/sheets/sticker-util.js');
 
 !function() {
 
@@ -19,7 +21,7 @@ var stickerUtil = require('./docs/sheets/sticker-util.js');
 
   var configPath = process.argv[2];
 
-  var baseDir = 'docs/sheets/';
+  var baseDir = __dirname + '/docs/sheets/';
 
   var tmpImgSuffix = '_tmpImage';
 
@@ -51,7 +53,6 @@ var stickerUtil = require('./docs/sheets/sticker-util.js');
                 (rgba >>> 16) & 0xff,
                 (rgba >>> 8) & 0xff);
           };
-
         }() :
         function() {
           // sequence of pixels.
