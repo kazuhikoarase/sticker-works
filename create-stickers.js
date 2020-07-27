@@ -26,7 +26,7 @@ var stickerUtil = require('./docs/sheets/sticker-util.js');
   var { JSDOM } = jsdom;
   var ColorUtil = stickerUtil.ColorUtil;
 
-  var render = function(sheet, i) {
+  var render = function(sheet, i, numSheets) {
 
     var renderQrcode = function(qr, pixels, image) {
 
@@ -121,11 +121,14 @@ var stickerUtil = require('./docs/sheets/sticker-util.js');
     </svg>`;
 
     var svg = new JSDOM(paper, { contentType: 'application/xml' });
-    stickerUtil.getBgStates(config, target.showGuide, svg.window.document);
-
-    var filename = config.title + '-'  + sheet.id + '.svg';
-    console.log('output ' + filename);
-    fs.writeFileSync('output/' + filename, svg.serialize() );
+    try {
+      stickerUtil.getBgStates(config, target.showGuide, svg.window.document);
+      var filename = config.title + '-'  + sheet.id + '.svg';
+      console.log(`output ${filename} (${i + 1} of ${numSheets})`);
+      fs.writeFileSync('output/' + filename, svg.serialize() );
+    } finally {
+      svg.window.close();
+    }
   };
 
   var loadResource = function(path, loadHandler) {
@@ -140,14 +143,26 @@ var stickerUtil = require('./docs/sheets/sticker-util.js');
   config.layers.forEach(function(layer, l) {
     var bgSvg = new JSDOM(target.layerStates[l].bgSVG,
         { contentType: 'application/xml' });
-    var bgSvgElm = bgSvg.window.document.querySelector('svg');
-    stickerUtil.postLoadSVG(target, config, bgSvgElm, layer.bgSelector);
-    bgSvgElm.setAttribute('x', '0');
-    bgSvgElm.setAttribute('y', '0');
-    bgSvgElm.setAttribute('width', '' + target.stickerWidth);
-    bgSvgElm.setAttribute('height', '' + target.stickerHeight);
-    target.layerStates[l].bgSVG = bgSvg.serialize();
+    try {
+      var bgSvgElm = bgSvg.window.document.querySelector('svg');
+      stickerUtil.postLoadSVG(target, config, bgSvgElm, layer.bgSelector);
+      bgSvgElm.setAttribute('x', '0');
+      bgSvgElm.setAttribute('y', '0');
+      bgSvgElm.setAttribute('width', '' + target.stickerWidth);
+      bgSvgElm.setAttribute('height', '' + target.stickerHeight);
+      target.layerStates[l].bgSVG = bgSvg.serialize();
+    } finally {
+      bgSvg.window.close();
+    }
   });
+
+  
+  // load test
+  var strings = [];
+  for (var i = 0; i < 3000; i += 1) {
+    strings.push('my url#' + i);
+  }
+  target.strings = strings;
 
   var sheets = stickerUtil.getSheets(
       target.config,
@@ -167,7 +182,7 @@ var stickerUtil = require('./docs/sheets/sticker-util.js');
     if (!imgPaths.length) {
       // end loading and start rendering.
       sheets.forEach(function(sheet, i) {
-        render(sheet, i);
+        render(sheet, i, sheets.length);
       });
       return;
     }
