@@ -10,6 +10,8 @@ var { JSDOM } = jsdom;
 
 !function() {
 
+  var configPath = 'assets/config4.json';
+
   var baseUrl = 'docs/sheets/';
 
   var tmpImgSuffix = '_tmpImage';
@@ -114,8 +116,8 @@ var { JSDOM } = jsdom;
     stickerUtil.getBgStates(config, target.showGuide, svg.window.document);
     paper = svg.serialize();
 
-    fs.writeFileSync('test.svg.xml', paper);
-    fs.writeFileSync('test.svg', paper);
+    fs.writeFileSync('output/test.svg.xml', paper);
+    fs.writeFileSync('output/test.svg', paper);
   };
 
   var loadResource = function(path, loadHandler) {
@@ -123,8 +125,7 @@ var { JSDOM } = jsdom;
   };
 
   var target = { showGuide: true };
-  stickerUtil.loadConfig(target, loadResource, 'assets/config4.json');
-  //var sheets = stickerUtil//   getSheets : function(config, stickerWidth, stickerHeight, strings) {
+  stickerUtil.loadConfig(target, loadResource, configPath);
   var config = target.config;
 
   config.layers.forEach(function(layer, l) {
@@ -152,11 +153,9 @@ var { JSDOM } = jsdom;
       imgPaths.push({ target: layer, prop: 'clipImage' });
     }
   });
-  var imgCount = imgPaths.length;
-  
+
   var loadImages = function() {
     if (!imgPaths.length) {
-      console.log('load complete/' + imgCount);
       render(sheets[0]);
       return;
     }
@@ -170,23 +169,6 @@ var { JSDOM } = jsdom;
     });
   };
   loadImages();
-
-
-
-  /*
-  console.log('image loaded?');
-  var tmpImgPath = 'docs/sheets/' + config.layers[0].clipImage;
-  console.log('read for ' + tmpImgPath)
-  jimp.read(tmpImgPath, function(err, image) {
-    var w = image.bitmap.width;
-    var h = image.bitmap.height;
-    console.log(w + 'x' + h);
-    console.log(image.getPixelColor(0,0));
-    console.log(jimp.intToRGBA(image.getPixelColor(0,0) ) );
-    console.log(jimp.intToRGBA(image.getPixelColor(w - 1, h - 1) ) );
-  });
-*/
-  
 
 }();
 
