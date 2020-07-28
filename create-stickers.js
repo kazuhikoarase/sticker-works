@@ -21,11 +21,33 @@ var stickerUtil = require(baseDir + 'sticker-util.js');
     return;
   }
 
+  var startTime = + new Date();
+
   var configPath = process.argv[2];
 
   var tmpImgSuffix = '_tmpImage';
 
   var ColorUtil = stickerUtil.ColorUtil;
+
+  var fillZ = function(n, digits) {
+    var s = '' + n;
+    while (s.length < digits) {
+      s = '0' + s;
+    }
+    return s;
+  };
+
+  var log = function(msg) {
+    var date = new Date();
+    var ts = fillZ(date.getFullYear(), 4) +
+      '-' + fillZ(date.getMonth() + 1, 2) +
+      '-'+ fillZ(date.getDate(), 2) +
+      ' '+ fillZ(date.getHours(), 2) +
+      ':'+ fillZ(date.getMinutes(), 2) +
+      ':'+ fillZ(date.getSeconds(), 2) +
+      '.'+ fillZ(date.getMilliseconds(), 3);
+    console.log(ts + ' - ' + msg);
+  };
 
   var postLoadSVG = function(target, config, $svg, bgSelector) {
     if (bgSelector) {
@@ -155,13 +177,8 @@ var stickerUtil = require(baseDir + 'sticker-util.js');
 
     applyBgStates(config, target.showGuide, $doc);
     var filename = config.title + '-'  + sheet.id + '.svg';
-    console.log(`output ${filename} (${i + 1} of ${numSheets})`);
-    outputResult(filename, $doc.html() );
-  };
-
-  var outputResult = function(filename, contents) {
-    fs.writeFileSync('output/' + filename, contents);
-    //fs.writeFileSync('output/' + filename + '.xml', contents);
+    log(`output ${filename} (${i + 1} of ${numSheets})`);
+    fs.writeFileSync('output/' + filename, $doc.html() );
   };
 
   var loadResource = function(path, loadHandler) {
@@ -184,16 +201,14 @@ var stickerUtil = require(baseDir + 'sticker-util.js');
     target.layerStates[l].bgSVG = $doc.html();
   });
 
-  /*
-  // load test
-  !function() {
+  /*!function() {
+    // load test
     var strings = [];
     for (var i = 0; i < 3000; i += 1) {
       strings.push('my url#' + i);
     }
     target.strings = strings;
-  }();
-  */
+  }();*/
 
   var sheets = stickerUtil.getSheets(
       target.config,
@@ -215,6 +230,9 @@ var stickerUtil = require(baseDir + 'sticker-util.js');
       sheets.forEach(function(sheet, i) {
         render(sheet, i, sheets.length);
       });
+      var endTime = + new Date();
+      log('output done (' + sheets.length +
+          ' sheets in ' + (endTime - startTime) + 'ms');
       return;
     }
     var imgPath = imgPaths.shift();
