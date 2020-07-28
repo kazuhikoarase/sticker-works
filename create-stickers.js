@@ -67,7 +67,7 @@ var stickerUtil = require(__dirname + '/docs/sheets/sticker-util.js');
       var size = config.qrSize;
       var imgSize = qr_.getModuleCount();
       layers += `<g transform="${'translate(' + qr.x + ' ' + qr.y +
-          ')scale(' + size / imgSize + ')'}">`;
+          ')scale(' + size / imgSize + ')'}" stroke="none">`;
       var rects = stickerUtil.getQrDataRects(qr_, getPixelAt, false);
       rects.forEach(function(rect) {
         layers += `<path d="${rect.path}" fill="${rect.color}"></path>`;
@@ -126,11 +126,17 @@ var stickerUtil = require(__dirname + '/docs/sheets/sticker-util.js');
       stickerUtil.getBgStates(config, target.showGuide, svg.window.document);
       var filename = config.title + '-'  + sheet.id + '.svg';
       console.log(`output ${filename} (${i + 1} of ${numSheets})`);
-      fs.writeFileSync('output/' + filename, svg.serialize() );
+      outputResult(filename, svg.serialize() );
     } finally {
       svg.window.close();
     }
   };
+
+  var outputResult = function(filename, contents) {
+    console.log('outtttt')
+    fs.writeFileSync('output/' + filename, contents);
+    fs.writeFileSync('output/' + filename + '.xml', contents);
+     };
 
   var loadResource = function(path, loadHandler) {
     loadHandler(fs.readFileSync(baseDir + path, 'UTF-8') );
@@ -157,14 +163,14 @@ var stickerUtil = require(__dirname + '/docs/sheets/sticker-util.js');
     }
   });
 
-  // load test
+/*  // load test
   !function() {
     var strings = [];
     for (var i = 0; i < 3000; i += 1) {
       strings.push('my url#' + i);
     }
     target.strings = strings;
-  }();
+  }();*/
 
   var sheets = stickerUtil.getSheets(
       target.config,

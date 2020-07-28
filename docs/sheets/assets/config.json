@@ -46,7 +46,7 @@
   "// negativePixels": [
     "#fff"
    ],
-  "bgColor": "#ccf",
+  "bgColor": "#fff",
   "bgSelector": "[fill='#eee']",
   "guideSelector": "[stroke-dasharray]"
 }
