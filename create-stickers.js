@@ -4,11 +4,13 @@
 
 'use strict';
 
+var baseDir = __dirname + '/docs/sheets/';
+
 var fs = require('fs');
-var jsdom = require("jsdom");
+var cheerio = require("cheerio");
 var jimp = require('jimp');
 var qrcode = require('qrcode-generator');
-var stickerUtil = require(__dirname + '/docs/sheets/sticker-util.js');
+var stickerUtil = require(baseDir + 'sticker-util.js');
 
 !function() {
 
@@ -21,12 +23,41 @@ var stickerUtil = require(__dirname + '/docs/sheets/sticker-util.js');
 
   var configPath = process.argv[2];
 
-  var baseDir = __dirname + '/docs/sheets/';
-
   var tmpImgSuffix = '_tmpImage';
 
-  var { JSDOM } = jsdom;
   var ColorUtil = stickerUtil.ColorUtil;
+
+  var postLoadSVG = function(target, config, $svg, bgSelector) {
+    if (bgSelector) {
+      var $bgs = $svg.find(bgSelector);
+      $bgs.attr({ 'x-bg-elm': 'x-bg-elm' });
+    }
+    var viewBox = ($svg.attr('viewBox') || '').split(/\s/g);
+    if (viewBox.length == 4) {
+      [ 'stickerWidth', 'stickerHeight' ].forEach(function(p, i) {
+        if (config[p] == 0) {
+          var v = +stickerUtil.pixel2mm(viewBox[2 + i]);
+          if (target[p] != v) {
+            target[p] = v;
+          }
+        }
+      });
+    }
+  };
+
+  var applyBgStates = function(config, showGuide, $svg) {
+    return (config.layers || []).map(function(layer, l) {
+      var layerSelector = '.layer-' + l;
+      var i, $elms;
+      $elms = $svg(layerSelector + ' [x-bg-elm]');
+      $elms.attr({ fill: layer.bgColor });
+      $elms.css({ fill: layer.bgColor });
+      if (layer.guideSelector) {
+        $elms = $svg(layerSelector + ' ' + layer.guideSelector);
+        $elms.css({ display: showGuide? '' : 'none' });
+      }
+    });
+  };
 
   var render = function(sheet, i, numSheets) {
 
@@ -113,30 +144,25 @@ var stickerUtil = require(__dirname + '/docs/sheets/sticker-util.js');
          width="${config.paperWidth}"
          height="${config.paperHeight}"></rect>` : ``;
 
-    var svg = new JSDOM(
+    var $doc = cheerio.load(
       `<svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
         width="${stickerUtil.mm2pixel(config.paperWidth) + 'px'}"
         height="${stickerUtil.mm2pixel(config.paperHeight) + 'px'}"
         viewBox="${'0 0 ' + config.paperWidth + ' ' + config.paperHeight}" >
         ${paperBox}
         ${layers}
-      </svg>`, { contentType: 'application/xml' });
+      </svg>`, { xmlMode: true });
 
-    try {
-      stickerUtil.getBgStates(config, target.showGuide, svg.window.document);
-      var filename = config.title + '-'  + sheet.id + '.svg';
-      console.log(`output ${filename} (${i + 1} of ${numSheets})`);
-      outputResult(filename, svg.serialize() );
-    } finally {
-      svg.window.close();
-    }
+    applyBgStates(config, target.showGuide, $doc);
+    var filename = config.title + '-'  + sheet.id + '.svg';
+    console.log(`output ${filename} (${i + 1} of ${numSheets})`);
+    outputResult(filename, $doc.html() );
   };
 
   var outputResult = function(filename, contents) {
-    console.log('outtttt')
     fs.writeFileSync('output/' + filename, contents);
-    fs.writeFileSync('output/' + filename + '.xml', contents);
-     };
+    //fs.writeFileSync('output/' + filename + '.xml', contents);
+  };
 
   var loadResource = function(path, loadHandler) {
     loadHandler(fs.readFileSync(baseDir + path, 'UTF-8') );
@@ -148,29 +174,26 @@ var stickerUtil = require(__dirname + '/docs/sheets/sticker-util.js');
   config.title = config.title.replace(/^\s+|\s+$/g, '') || 'stickers';
 
   config.layers.forEach(function(layer, l) {
-    var bgSvg = new JSDOM(target.layerStates[l].bgSVG,
-        { contentType: 'application/xml' });
-    try {
-      var bgSvgElm = bgSvg.window.document.querySelector('svg');
-      stickerUtil.postLoadSVG(target, config, bgSvgElm, layer.bgSelector);
-      bgSvgElm.setAttribute('x', '0');
-      bgSvgElm.setAttribute('y', '0');
-      bgSvgElm.setAttribute('width', '' + target.stickerWidth);
-      bgSvgElm.setAttribute('height', '' + target.stickerHeight);
-      target.layerStates[l].bgSVG = bgSvg.serialize();
-    } finally {
-      bgSvg.window.close();
-    }
+    var $doc = cheerio.load(target.layerStates[l].bgSVG,
+        { xmlMode: true });
+    var $bgSvg = $doc('svg');
+    postLoadSVG(target, config, $bgSvg, layer.bgSelector);
+    $bgSvg.attr({x: '0', y: '0',
+      width: '' + target.stickerWidth,
+      height: '' + target.stickerHeight });
+    target.layerStates[l].bgSVG = $doc.html();
   });
 
-/*  // load test
+  /*
+  // load test
   !function() {
     var strings = [];
     for (var i = 0; i < 3000; i += 1) {
       strings.push('my url#' + i);
     }
     target.strings = strings;
-  }();*/
+  }();
+  */
 
   var sheets = stickerUtil.getSheets(
       target.config,

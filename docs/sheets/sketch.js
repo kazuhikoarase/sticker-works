@@ -72,7 +72,7 @@ new Vue({
       );
     },
     svgBgStyle: function() {
-      var bgStates = stickerUtil.getBgStates(this.config, this.showGuide, this.$el);
+      var bgStates = this.applyBgStates(this.config, this.showGuide, this.$el);
       return [ bgStates, this.bgUpdate, this.showGuide ];
     },
     frameStyle: function() {
@@ -137,9 +137,54 @@ new Vue({
       config.frameHeight = Math.max(0, this.lastState.frameHeight + dy);
     },
     svg_loadHandler: function(event, bgSelector) {
-      if (stickerUtil.postLoadSVG(this, this.config, event.svg, bgSelector) ) {
+      if (this.postLoadSVG(this, this.config, event.svg, bgSelector) ) {
         this.bgUpdate = +new Date();
       }
+    },
+    postLoadSVG : function(target, config, svg, bgSelector) {
+      var bgUpdated = false;
+      if (bgSelector) {
+        var bgElms = svg.querySelectorAll(bgSelector);
+        for (var i = 0; i < bgElms.length; i += 1) {
+          bgElms[i].setAttribute('x-bg-elm', 'x-bg-elm');
+        }
+        bgUpdated = true;
+      }
+      var viewBox = (svg.getAttribute('viewBox') || '').split(/\s/g);
+      if (viewBox.length == 4) {
+        [ 'stickerWidth', 'stickerHeight' ].forEach(function(p, i) {
+          if (config[p] == 0) {
+            var v = +stickerUtil.pixel2mm(viewBox[2 + i]);
+            if (target[p] != v) {
+              target[p] = v;
+            }
+          }
+        });
+      }
+      return bgUpdated;
+    },
+    applyBgStates: function(config, showGuide, doc) {
+      return (config.layers || []).map(function(layer, l) {
+        var layerSelector = '.layer-' + l;
+        var i, elms;
+        elms = doc.querySelectorAll(layerSelector + ' [x-bg-elm]');
+        for (i = 0; i < elms.length; i += 1) {
+          elms[i].setAttribute('fill', layer.bgColor);
+          elms[i].style.fill = layer.bgColor;
+        }
+        if (layer.guideSelector) {
+          elms = doc.querySelectorAll(layerSelector + ' ' +
+              layer.guideSelector);
+          for (i = 0; i < elms.length; i += 1) {
+            elms[i].style.display = showGuide? '' : 'none';
+          }
+        }
+        return {
+          bgSelector: layer.bgSelector,
+          bgColor: layer.bgColor,
+          guideSelector: layer.guideSelector
+        };
+      });
     },
     download_clickHandler: function(index, id) {
       var config = this.config;

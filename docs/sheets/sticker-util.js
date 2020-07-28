@@ -266,33 +266,11 @@ var stickerUtil = function() {
       }
       return transform;
     },
-    postLoadSVG : function(target, config, svg, bgSelector) {
-      var bgUpdated = false;
-      if (bgSelector) {
-        var bgElms = svg.querySelectorAll(bgSelector);
-        for (var i = 0; i < bgElms.length; i += 1) {
-          bgElms[i].setAttribute('x-bg-elm', 'x-bg-elm');
-        }
-        bgUpdated = true;
-      }
-      var viewBox = (svg.getAttribute('viewBox') || '').split(/\s/g);
-      if (viewBox.length == 4) {
-        [ 'stickerWidth', 'stickerHeight' ].forEach(function(p, i) {
-          if (config[p] == 0) {
-            var v = +stickerUtil.pixel2mm(viewBox[2 + i]);
-            if (target[p] != v) {
-              target[p] = v;
-            }
-          }
-        });
-      }
-      return bgUpdated;
-    },
     getSheets : function(config, stickerWidth, stickerHeight, strings) {
 
       var getId = function(i) {
         var id = '' + i;
-        while (id.length < 2) {
+        while (id.length < 3) {
           id = '0' + id;
         }
         return id;
@@ -349,29 +327,6 @@ var stickerUtil = function() {
         sheets.push({ id: getId(sheets.length + 1), stickers: stickers });
       }
       return sheets;
-    },
-    getBgStates: function(config, showGuide, doc) {
-      return (config.layers || []).map(function(layer, l) {
-        var layerSelector = '.layer-' + l;
-        var i, elms;
-        elms = doc.querySelectorAll(layerSelector + ' [x-bg-elm]');
-        for (i = 0; i < elms.length; i += 1) {
-          elms[i].setAttribute('fill', layer.bgColor);
-          elms[i].style.fill = layer.bgColor;
-        }
-        if (layer.guideSelector) {
-          elms = doc.querySelectorAll(layerSelector + ' ' +
-              layer.guideSelector);
-          for (i = 0; i < elms.length; i += 1) {
-            elms[i].style.display = showGuide? '' : 'none';
-          }
-        }
-        return {
-          bgSelector: layer.bgSelector,
-          bgColor: layer.bgColor,
-          guideSelector: layer.guideSelector
-        };
-      });
     },
     getQrDataRects: function(qr, getPixelAt, negativePattern) {
       var moduleCount = qr.getModuleCount();
