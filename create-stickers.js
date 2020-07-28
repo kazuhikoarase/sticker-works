@@ -83,7 +83,8 @@ var stickerUtil = require(baseDir + 'sticker-util.js');
 
   var render = function(sheet, i, numSheets) {
 
-    var renderQrcode = function(qr, pixels, image) {
+    var renderQrcode = function(qr, pixels,
+        negativePattern, image) {
 
       var list = [];
       var map = {};
@@ -91,7 +92,7 @@ var stickerUtil = require(baseDir + 'sticker-util.js');
       var qr_ = qrcode(config.typeNumber, config.ecl);
       qr_.addData(qr.data);
       qr_.make();
-
+      var moduleCount = qr_.getModuleCount();
       var getPixelAt = image?
         function() {
           // grab from image.
@@ -121,7 +122,7 @@ var stickerUtil = require(baseDir + 'sticker-util.js');
       var imgSize = qr_.getModuleCount();
       layers += `<g transform="${'translate(' + qr.x + ' ' + qr.y +
           ')scale(' + size / imgSize + ')'}" stroke="none">`;
-      var rects = stickerUtil.getQrDataRects(qr_, getPixelAt, false);
+      var rects = stickerUtil.getQrDataRects(qr_, getPixelAt, negativePattern);
       rects.forEach(function(rect) {
         layers += `<path d="${rect.path}" fill="${rect.color}"></path>`;
       });
@@ -145,13 +146,14 @@ var stickerUtil = require(baseDir + 'sticker-util.js');
 
         if (layer.pixels || layer.clipImage) {
           sticker.qrs.forEach(function(qr) {
-            renderQrcode(qr, layer.pixels, layer['clipImage' + tmpImgSuffix]);
+            renderQrcode(qr, layer.pixels, false,
+                layer['clipImage' + tmpImgSuffix]);
           });
         }
 
         if (layer.negativePixels) {
           sticker.qrs.forEach(function(qr) {
-            renderQrcode(qr, layer.negativePixels);
+            renderQrcode(qr, layer.negativePixels, true);
           });
         }
 
