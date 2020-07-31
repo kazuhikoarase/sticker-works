@@ -81,7 +81,7 @@ var stickerUtil = require(baseDir + 'sticker-util.js');
     });
   };
 
-  var render = function(sheet, i, numSheets) {
+  var renderSheet = function(sheet, i, numSheets) {
 
     var renderQrcode = function(qr, pixels,
         negativePattern, image) {
@@ -171,16 +171,75 @@ var stickerUtil = require(baseDir + 'sticker-util.js');
     var $doc = cheerio.load(
       `<svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
         width="${stickerUtil.mm2pixel(config.paperWidth) + 'px'}"
-        height="${stickerUtil.mm2pixel(config.paperHeight) + 'px'}"
+        height="${stickerUtil.mm2pixel(config.paperWidth) + 'px'}"
         viewBox="${'0 0 ' + config.paperWidth + ' ' + config.paperHeight}" >
         ${paperBox}
         ${layers}
       </svg>`, { xmlMode: true });
 
     applyBgStates(config, target.showGuide, $doc);
-    var filename = config.title + '-'  + sheet.id + '.svg';
-    log(`output ${filename} (${i + 1} of ${numSheets})`);
-    fs.writeFileSync('output/' + filename, $doc.html() );
+
+    !function() {
+      var filename = config.title + '-'  + sheet.id + '.svg';
+      log(`output ${filename} (${i + 1} of ${numSheets})`);
+      fs.writeFileSync('output/' + filename, $doc.html() );
+    }();
+
+    if (artboards) {
+      var numAb = artboards.hCount * artboards.vCount;
+      if (i % numAb == 0) {
+
+        closeAbFdIfOpened();
+
+        var n = Math.floor(i / numAb);
+        var filename = config.title + '-ab-' + fillZ(n, 3) + '.svg';
+        artboardsFd = fs.openSync('output/' + filename, 'w');
+        var abWidth = config.paperWidth +
+          (config.paperWidth + artboards.hGap) * (artboards.hCount - 1);
+        var abHeight = config.paperHeight +
+          (config.paperHeight + artboards.vGap) * (artboards.vCount - 1);
+        fs.writeSync(artboardsFd,
+            `<svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
+          width="${stickerUtil.mm2pixel(abWidth) + 'px'}"
+          height="${stickerUtil.mm2pixel(abHeight) + 'px'}"
+          viewBox="${'0 0 ' + abWidth + ' ' +
+            abHeight}" >`);
+        /*
+        fs.writeSync(artboardsFd,
+            `<rect fill='red' stroke='yellow' width="${abWidth}" height="${abHeight}" />`);
+        */
+      }
+
+      var x = (i % artboards.hCount) *
+        (config.paperWidth + artboards.hGap);
+      var y = (Math.floor(i / artboards.hCount) % artboards.vCount) *
+        (config.paperHeight + artboards.vGap);
+      $doc(':root').attr({ x: x + 'px', y: y + 'px',
+        width: config.paperWidth + 'px', height: config.paperHeight + 'px' });
+      fs.writeSync(artboardsFd, $doc.html() );
+    }
+  };
+
+  var closeAbFdIfOpened = function() {
+    if (artboardsFd !== null) {
+      fs.writeSync(artboardsFd, `</svg>\n`);
+      fs.closeSync(artboardsFd);
+      artboardsFd = null;
+    }
+  };
+
+  var renderSheets = function(sheet, i, numSheets) {
+    // end loading and start rendering.
+
+    sheets.forEach(function(sheet, i) {
+      renderSheet(sheet, i, sheets.length);
+    });
+
+    closeAbFdIfOpened();
+
+    var endTime = + new Date();
+    log('output done (' + sheets.length +
+        ' sheets in ' + (endTime - startTime) + 'ms)');
   };
 
   var loadResource = function(path, loadHandler) {
@@ -191,6 +250,14 @@ var stickerUtil = require(baseDir + 'sticker-util.js');
   stickerUtil.loadConfig(target, loadResource, configPath);
   var config = target.config;
   config.title = config.title.replace(/^\s+|\s+$/g, '') || 'stickers';
+
+  var artboards = config.artboards;
+  var artboardsFd = null;
+
+  if (artboards) {
+    artboards.hCount = artboards.hCount || 1;
+    artboards.vCount = artboards.vCount || 1;
+  }
 
   config.layers.forEach(function(layer, l) {
     var $doc = cheerio.load(target.layerStates[l].bgSVG,
@@ -206,7 +273,7 @@ var stickerUtil = require(baseDir + 'sticker-util.js');
   /*!function() {
     // load test
     var strings = [];
-    for (var i = 0; i < 3000; i += 1) {
+    for (var i = 0; i < 1000; i += 1) {
       strings.push('my url#' + i);
     }
     target.strings = strings;
@@ -228,13 +295,7 @@ var stickerUtil = require(baseDir + 'sticker-util.js');
 
   var loadImages = function() {
     if (!imgPaths.length) {
-      // end loading and start rendering.
-      sheets.forEach(function(sheet, i) {
-        render(sheet, i, sheets.length);
-      });
-      var endTime = + new Date();
-      log('output done (' + sheets.length +
-          ' sheets in ' + (endTime - startTime) + 'ms');
+      renderSheets();
       return;
     }
     var imgPath = imgPaths.shift();
