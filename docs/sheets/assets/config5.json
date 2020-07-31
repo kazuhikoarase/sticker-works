@@ -67,5 +67,12 @@
       "bgSelector": "[fill='#ccc']",
       "guideSelector": "[stroke-dasharray]"
     }
-  ]
+  ],
+  "// artboards(optional).": "",
+  "artboards": {
+    "hCount": 10,
+    "vCount": 5,
+    "hGap": 10,
+    "vGap": 10
+  }
 }
