@@ -4,6 +4,24 @@
 
 var stickerUtil = function() {
 
+  var createCanvas = function() {
+    if (typeof document == 'object') {
+      return function(width, height) {
+        var canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        return canvas;
+      };
+    } else {
+      var { createCanvas } = require('canvas');
+      var cvCache = {};
+      return function(width, height) {
+        var k = width + 'x' + height;
+        return cvCache[k] || (cvCache[k] = createCanvas(width, height) );
+      };
+    }
+  }();
+
   var dpi = 72 // fixed to 72dpi
 
   var ColorUtil = function() {
@@ -196,9 +214,7 @@ var stickerUtil = function() {
         var rgb = cache[color];
         if (!rgb) {
           if (ctx == null) {
-            ctx = document.createElement('canvas').getContext('2d');
-            ctx.canvas.width = 1;
-            ctx.canvas.height = 1;
+            ctx = createCanvas(1, 1).getContext('2d');
           }
           ctx.fillStyle = color;
           ctx.fillRect(0, 0, 1, 1);
@@ -261,8 +277,8 @@ var stickerUtil = function() {
     getStickerTransform: function(target, sticker) {
       var transform = 'translate(' + sticker.x + ' ' + sticker.y +')';
       if (target.config.rotate) {
-        transform += 'translate(' + target.stickerHeight + '0)'
-        transform += 'rotate(90)'
+        transform += 'translate(' + target.stickerHeight + '0)';
+        transform += 'rotate(90)';
       }
       return transform;
     },
@@ -379,6 +395,42 @@ var stickerUtil = function() {
       }
       return rects;
     },
+    getQrDataUrl: function(qr, getPixelAt, negativePattern) {
+      var moduleCount = qr.getModuleCount();
+      // There are three position probe patterns
+      // at fixed position and size.
+      var posProbes = [
+        { x: 2, y: 2, pixel: null },
+        { x: moduleCount - 5, y: 2, pixel: null },
+        { x: 2, y: moduleCount - 5, pixel: null }
+      ];
+      var ctx = createCanvas(moduleCount, moduleCount).getContext('2d');
+      var lastPixel = null;
+      ctx.clearRect(0, 0, moduleCount, moduleCount);
+      for (var r = 0; r < moduleCount; r += 1) {
+        for (var c = 0; c < moduleCount; c += 1) {
+          if (qr.isDark(r, c) ^ negativePattern) {
+            var pixel = getPixelAt(r, c, moduleCount);
+            posProbes.forEach(function(pp) {
+              if (pp.x == c && pp.y == r) {
+                pp.pixel = pixel; // store left-top pixel
+              } else if (pp.x <= c && c < pp.x + 3 &&
+                pp.y <= r && r < pp.y + 3) {
+                pixel = pp.pixel; // use stored pixel
+              }
+            });
+            if (lastPixel != pixel) {
+              // pixel changed.
+              ctx.fillStyle = pixel;
+              lastPixel = pixel;
+            }
+            ctx.fillRect(c, r, 1, 1);
+          }
+        }
+      }
+      return ctx.canvas.toDataURL();
+    },
+    createCanvas: createCanvas,
     ColorUtil: ColorUtil
   };
 }();

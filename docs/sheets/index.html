@@ -109,6 +109,7 @@
                             :size="config.qrSize"
                             :type-number="config.typeNumber"
                             :error-correction-level="config.ecl"
+                            :raster="config.raster"
                             v-if="layer.pixels || layer.clipImage"
                             :href="layer.clipImage"
                             :pixels="layer.pixels" ></qrcode>
@@ -117,6 +118,7 @@
                             :size="config.qrSize"
                             :type-number="config.typeNumber"
                             :error-correction-level="config.ecl"
+                            :raster="config.raster"
                             v-if="layer.negativePixels"
                             :pixels="layer.negativePixels"
                             :negative-pattern="true" ></qrcode>

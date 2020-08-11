@@ -1,0 +1,61 @@
+{
+  "title": "stickers-test-raster",
+  "dataUrl": "assets/URLs3.txt",
+  "raster": true,
+  "// Here is the size derived from the Illustrator's Artboard size.": "",
+  "// If it is specified 0, the value is calculated from viewBox of SVG.": "",
+  "//stickerWidth": 100,
+  "//stickerHeight": 100,
+  "stickerWidth": 0,
+  "stickerHeight": 0,
+  "paperWidth": 200,
+  "paperHeight": 440,
+  "marginLeft": 7,
+  "marginRight": 0,
+  "marginTop": 15,
+  "marginBottom": 10,
+  "hGap": 10,
+  "vGap": 5,
+  "qrSize": 49,
+  "// You could define multiple qrMarginLeft then would get same number of qrcodes.": "",
+  "qrMarginLeft": [
+    {
+      "coarse": 11,
+      "fine": 0
+    }
+  ],
+  "qrMarginTop": {
+    "coarse": 10,
+    "fine": 0
+  },
+  "frameWidth": 643,
+  "frameHeight": 510,
+  "showPaperBox": true,
+  "showBgBox": true,
+  "rotate": true,
+  "zoom": "0.5",
+  "// TypeNumber 0(auto) or 1~40": "",
+  "typeNumber": 0,
+  "// ErrorCorrectionLevel": "",
+  "ecl": "L",
+  "layers": [
+    {
+      "bgUrl": "assets/bg.svg",
+      "clipImage": "assets/qr-bg.png",
+      "bgColor": "#eee",
+      "bgSelector": "[fill='#eee']",
+      "guideSelector": "[stroke-dasharray]"
+    },
+    {
+      "bgUrl": "assets/bg-blank.svg",
+      "negativePixels": ["#fff" ]
+    }
+  ],
+  "// artboards(optional).": "",
+  "artboards": {
+    "hCount": 10,
+    "vCount": 5,
+    "hGap": 10,
+    "vGap": 10
+  }
+}

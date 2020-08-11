@@ -4,6 +4,7 @@
     "fs": "0.0.1-security",
     "cheerio": "^1.0.0-rc.3",
     "jimp": "^0.14.0",
+    "canvas": "^2.6.1",
     "qrcode-generator": "^1.4.3"
   }
 }

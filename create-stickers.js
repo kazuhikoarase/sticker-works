@@ -122,10 +122,17 @@ var stickerUtil = require(baseDir + 'sticker-util.js');
       var imgSize = qr_.getModuleCount();
       layers += `<g transform="${'translate(' + qr.x + ' ' + qr.y +
           ')scale(' + size / imgSize + ')'}" stroke="none">`;
-      var rects = stickerUtil.getQrDataRects(qr_, getPixelAt, negativePattern);
-      rects.forEach(function(rect) {
-        layers += `<path d="${rect.path}" fill="${rect.color}"></path>`;
-      });
+      if (!config.raster) {
+        var rects = stickerUtil.getQrDataRects(qr_, getPixelAt, negativePattern);
+        rects.forEach(function(rect) {
+          layers += `<path d="${rect.path}" fill="${rect.color}"></path>`;
+        });
+      } else {
+        var url = stickerUtil.getQrDataUrl(qr_, getPixelAt, negativePattern);
+        layers += `<image xmlns:xlink="http://www.w3.org/1999/xlink"
+           xlink:href="${url}" width="${imgSize}" height="${imgSize}"
+           style="image-rendering: pixelated" />`;
+      }
       layers += `</g>`;
     };
 

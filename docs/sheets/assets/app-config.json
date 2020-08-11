@@ -9,6 +9,10 @@
     { "title": "my config4(clip test)",
       "url": "assets/config4.json" },
     { "title": "my config5(multi layers)",
-      "url": "assets/config5.json", "selected": true }
+      "url": "assets/config5.json" },
+    { "title": "my config6(by vector)",
+      "url": "assets/config6-vector.json", "selected": true },
+    { "title": "my config6(by raster)",
+      "url": "assets/config6-raster.json" }
   ]
 }

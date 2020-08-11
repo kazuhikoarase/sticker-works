@@ -209,9 +209,7 @@
       }
       var img = document.createElement('img');
       img.addEventListener('load', function() {
-        var ctx = document.createElement('canvas').getContext('2d');
-        ctx.canvas.width = img.width;
-        ctx.canvas.height = img.height;
+        var ctx = stickerUtil.createCanvas(img.width, img.height).getContext('2d');
         ctx.drawImage(img, 0, 0);
         cache[href] = ctx;
         document.body.removeChild(img);
@@ -258,7 +256,10 @@
 
   components['qrcode'] = {
     template: '<g :transform="transform" stroke="none">' +
-        '<path v-for="r in rects" :d="r.path" :fill="r.color" />' +
+        '<path v-if="!raster" v-for="r in rects" :d="r.path" :fill="r.color" />' +
+        '<image v-if="raster" xmlns:xlink="http://www.w3.org/1999/xlink"' +
+          ' :xlink:href="url" :width="imgSize" :height="imgSize"' +
+          ' style="image-rendering: pixelated" />' +
       '</g>',
     props: {
       typeNumber: { default: 0 },
@@ -269,10 +270,12 @@
       y: { default: 0, type: Number },
       size: { default: 100, type: Number },
       href: { default: '', type: String },
+      raster: { default: false, type: Boolean },
       pixels : { default: function() { return [ '#666' ] }, type: Array }
     },
     data: function() {
-      return { rects: [], imgSize: 0, imgLoaded: false, imgCtx: null };
+      return { rects: [], url: '',
+        imgSize: 0, imgLoaded: false, imgCtx: null };
     },
     methods : {
     },
@@ -285,7 +288,8 @@
         var qrDataKey = [this.typeNumber, this.errorCorrectionLevel,
                    this.negativePattern,
                    this.href,
-                   this.pixels.join(','), '', this.data].join('\n');
+                   this.pixels.join(','), '',
+                   this.data, this.raster].join('\n');
         var qrData = cacheMap[qrDataKey];
         stat.callCount +=1;
         if (!qrData) {
@@ -338,14 +342,19 @@
           var moduleCount = qr.getModuleCount();
           // put to cache.
           qrData = cacheMap[qrDataKey] = {
-            rects: stickerUtil.getQrDataRects(
-                qr, getPixelAt, this.negativePattern),
-            imgSize: moduleCount
-          };
+            rects: [], url: '', imgSize: moduleCount };
+          if (!this.raster) {
+            qrData.rects = stickerUtil.getQrDataRects(
+                qr, getPixelAt, this.negativePattern);
+          } else {
+            qrData.url = stickerUtil.getQrDataUrl(
+                qr, getPixelAt, this.negativePattern);
+          }
         }
         this.rects = qrData.rects;
+        this.url = qrData.url;
         this.imgSize = qrData.imgSize;
-        return [ this.rects, this.imgSize, this.imgLoaded ];
+        return [ this.rects, this.url, this.imgSize, this.imgLoaded ];
       },
       transform: function() {
         if (this.imgSize == 0) {
